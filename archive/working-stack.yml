@@ -1,0 +1,64 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    network_mode: host
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: WaficWazzan!2
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    network_mode: host
+    volumes:
+      - redis_data:/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    network_mode: host
+    environment:
+      PGADMIN_DEFAULT_EMAIL: wafic@wazzan.us
+      PGADMIN_DEFAULT_PASSWORD: WaficWazzan!2
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_LISTEN_PORT: 8080
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    network_mode: host
+    environment:
+      GF_SERVER_HTTP_PORT: 3000
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: WaficWazzan!2
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  heimdall:
+    image: lscr.io/linuxserver/heimdall:latest
+    container_name: heimdall
+    restart: always
+    network_mode: host
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: America/Toronto
+    volumes:
+      - heimdall_config:/config
+
+volumes:
+  postgres_data:
+  redis_data:
+  pgadmin_data:
+  grafana_data:
+  heimdall_config:

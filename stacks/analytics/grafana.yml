@@ -1,0 +1,37 @@
+
+# analytics.yml
+version: '3.8'
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - "${GRAFANA_PORT}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER}
+      GF_SECURITY_ADMIN_PASSWORD_FILE: /run/secrets/grafana_password
+    volumes:
+      - grafana_config:/etc/grafana # Changed to named volume
+      - grafana_data:/var/lib/grafana # Changed to named volume
+      - grafana_plugins:/var/lib/grafana/plugins # Changed to named volume
+    networks:
+      - analytics_network
+      - database_network
+    secrets:
+      - grafana_password
+
+
+networks:
+  analytics_network:
+    external: true
+  database_network:
+    external: true
+
+secrets:
+  grafana_password:
+    file: ./secrets/grafana_password.txt
+
+
+####################

@@ -1,0 +1,35 @@
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - database_network
+    secrets:
+      - postgres_password
+
+
+networks:
+  database_network:
+    external: true
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  mysql_root_password:
+    file: ./secrets/mysql_root_password.txt
+  mysql_user_password:
+    file: ./secrets/mysql_user_password.txt
+  pgadmin_email:
+    file: ./secrets/pgadmin_email.txt
+  pgadmin_password:
+    file: ./secrets/pgadmin_password.txt

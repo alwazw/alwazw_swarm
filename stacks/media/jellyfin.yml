@@ -1,0 +1,81 @@
+
+# =============================================================================
+# JELLYFIN - Alternative Media Server
+# =============================================================================
+
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    volumes:
+      - jellyfin_config:/config
+      - ${MEDIA_TV_SERIES_PATH}:/data/tvshows
+      - ${MEDIA_MOVIES_PATH}:/data/movies
+      - ${MEDIA_MUSIC_PATH}:/data/music
+    ports:
+      - "8096:8096"
+      - "8920:8920" # Optional HTTPS port
+      - "7359:7359/udp" # Optional auto-discovery
+      - "1900:1900/udp" # Optional DLNA
+    networks:
+      - media_network
+      - proxy_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.${PRIMARY_DOMAIN}`) || Host(`jellyfin.${SECONDARY_DOMAIN}`)"
+      - "traefik.http.routers.jellyfin.tls=true"
+      - "traefik.http.routers.jellyfin.tls.certresolver=${CERT_RESOLVER}"
+      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
+
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  nextcloud_network:
+    driver: bridge
+    internal: false
+  media_network:
+    driver: bridge
+    internal: false
+  proxy_network:
+    external: true
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  # Nextcloud
+  nextcloud_data:
+  nextcloud_db_data:
+  
+  # Syncthing
+  syncthing_config:
+  
+  # Plex
+  plex_config:
+  
+  # Jellyfin
+  jellyfin_config:
+  
+  # PhotoPrism
+  photoprism_storage:
+  photoprism_db_data:
+  
+  # Immich
+  immich_model_cache:
+  immich_postgres_data:
+  
+  # FileBrowser
+  filebrowser_config:
+  filebrowser_database:
+  
+  # Duplicati
+  duplicati_config:
+
+##############################################################33

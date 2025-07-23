@@ -1,0 +1,15 @@
+
+
+###########
+
+# _base.yml
+version: '3.8'
+
+# Define a common service template for reuse
+x-common-service: &default-app-config
+  restart: unless-stopped
+  environment:
+    PUID: ${PUID}
+    PGID: ${PGID}
+    TZ: ${TZ}
+

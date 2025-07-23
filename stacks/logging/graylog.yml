@@ -1,0 +1,83 @@
+# =============================================================================
+# GRAYLOG - Enterprise Log Management (Alternative)
+# =============================================================================
+
+services:
+  graylog-mongo:
+    image: mongo:5.0
+    container_name: graylog-mongo
+    restart: unless-stopped
+    volumes:
+      - graylog_mongo_data:/data/db
+    networks:
+      - logging_network
+
+  graylog-opensearch:
+    image: opensearchproject/opensearch:2.4.0
+    container_name: graylog-opensearch
+    restart: unless-stopped
+    environment:
+      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "bootstrap.memory_lock=true"
+      - "discovery.type=single-node"
+      - "action.auto_create_index=false"
+      - "plugins.security.ssl.http.enabled=false"
+      - "plugins.security.disabled=true"
+    volumes:
+      - graylog_opensearch_data:/usr/share/opensearch/data
+    ulimits:
+      memlock:
+        hard: -1
+        soft: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    networks:
+      - logging_network
+
+  graylog:
+    image: graylog/graylog:5.2
+    container_name: graylog
+    restart: unless-stopped
+    environment:
+      - GRAYLOG_PASSWORD_SECRET=${AUTHENTIK_SECRET_KEY}
+      - GRAYLOG_ROOT_PASSWORD_SHA2=$(echo -n "${USER_PASSWORD}" | sha256sum | cut -d" " -f1)
+      - GRAYLOG_HTTP_EXTERNAL_URI=https://graylog.${PRIMARY_DOMAIN}/
+      - GRAYLOG_ELASTICSEARCH_HOSTS=http://graylog-opensearch:9200
+      - GRAYLOG_MONGODB_URI=mongodb://graylog-mongo:27017/graylog
+    volumes:
+      - graylog_data:/usr/share/graylog/data
+    depends_on:
+      - graylog-mongo
+      - graylog-opensearch
+    networks:
+      - logging_network
+      - proxy_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.graylog.rule=Host(`graylog.${PRIMARY_DOMAIN}`) || Host(`graylog.${SECONDARY_DOMAIN}`)"
+      - "traefik.http.routers.graylog.tls=true"
+      - "traefik.http.routers.graylog.tls.certresolver=${CERT_RESOLVER}"
+      - "traefik.http.services.graylog.loadbalancer.server.port=9000"
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  logging_network:
+    driver: bridge
+    internal: false
+  proxy_network:
+    external: true
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  loki_data:
+  promtail_data:
+  elasticsearch_data:
+  filebeat_data:
+  graylog_mongo_data:
+  graylog_opensearch_data:
+  graylog_data:

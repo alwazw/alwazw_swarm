@@ -1,0 +1,47 @@
+# =============================================================================
+# KIBANA - Elasticsearch Dashboard (Optional)
+# =============================================================================
+
+services:
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_PUBLICBASEURL=https://kibana.${PRIMARY_DOMAIN}
+    depends_on:
+      - elasticsearch
+    networks:
+      - logging_network
+      - proxy_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kibana.rule=Host(`kibana.${PRIMARY_DOMAIN}`) || Host(`kibana.${SECONDARY_DOMAIN}`)"
+      - "traefik.http.routers.kibana.tls=true"
+      - "traefik.http.routers.kibana.tls.certresolver=${CERT_RESOLVER}"
+      - "traefik.http.services.kibana.loadbalancer.server.port=5601"
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  logging_network:
+    driver: bridge
+    internal: false
+  proxy_network:
+    external: true
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  loki_data:
+  promtail_data:
+  elasticsearch_data:
+  filebeat_data:
+  graylog_mongo_data:
+  graylog_opensearch_data:
+  graylog_data:
+
+#############################################

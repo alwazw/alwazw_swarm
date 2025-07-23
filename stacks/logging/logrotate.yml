@@ -1,0 +1,43 @@
+# =============================================================================
+# LOGROTATE - Log Rotation Management
+# =============================================================================
+
+services:
+  logrotate:
+    image: linkyard/docker-logrotate:latest
+    container_name: logrotate
+    restart: unless-stopped
+    environment:
+      - LOGS_DIRECTORIES=/var/lib/docker/containers /var/log
+      - LOGROTATE_INTERVAL=daily
+      - LOGROTATE_COPIES=7
+      - LOGROTATE_SIZE=100M
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers
+      - /var/log:/var/log
+    networks:
+      - logging_network
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  logging_network:
+    driver: bridge
+    internal: false
+  proxy_network:
+    external: true
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  loki_data:
+  promtail_data:
+  elasticsearch_data:
+  filebeat_data:
+  graylog_mongo_data:
+  graylog_opensearch_data:
+  graylog_data:
+
+#############################################

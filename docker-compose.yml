@@ -1,0 +1,62 @@
+# docker-compose.yml
+version: '3.8'
+
+# Define a common service template for reuse
+x-common-service: &default-app-config
+  restart: unless-stopped
+  environment:
+    PUID: ${PUID}
+    PGID: ${PGID}
+    TZ: ${TZ}
+
+# This file acts as the orchestrator, merging all component files
+services:
+  # No services defined directly here, they are in component files
+
+# All networks should be defined in the main compose file
+networks:
+  database_network:
+    driver: bridge
+  networking_network:
+    driver: bridge
+  dashboard_network:
+    driver: bridge
+  analytics_network:
+    driver: bridge
+  media_network:
+    driver: bridge
+  automation_network:
+    driver: bridge
+  security_network:
+    driver: bridge
+  wazuh_network:
+    driver: bridge
+
+# All named volumes should be defined here
+volumes:
+  # Database Volumes
+  postgres_data:
+  redis_data:
+  mariadb_config:
+  pgadmin_data:
+  # Analytics Volumes
+  grafana_config:
+  grafana_data:
+  grafana_plugins:
+  # Networking Volumes
+  librespeed_config:
+  adguardhome_work:
+  adguardhome_conf:
+  # Security Volumes
+  vaultwarden_data:
+  wazuh_manager_data:
+  wazuh_manager_certs:
+  wazuh_indexer_data:
+  wazuh_dashboard_data:
+  # Dashboard Volumes
+  heimdall_config:
+  # Media Volumes
+  plex_config:
+  # Automation Volumes
+  n8n_data:
+  home_assistant_config:

@@ -1,0 +1,45 @@
+# =============================================================================
+# ELASTICSEARCH - Alternative Log Storage (Optional)
+# =============================================================================
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - logging_network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  logging_network:
+    driver: bridge
+    internal: false
+  proxy_network:
+    external: true
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  loki_data:
+  promtail_data:
+  elasticsearch_data:
+  filebeat_data:
+  graylog_mongo_data:
+  graylog_opensearch_data:
+  graylog_data:
+
+#############################################

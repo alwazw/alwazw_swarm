@@ -1,0 +1,49 @@
+# =============================================================================
+# DOZZLE - Real-time Log Viewer
+# =============================================================================
+
+services:
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: unless-stopped
+    environment:
+      - DOZZLE_LEVEL=info
+      - DOZZLE_TAILSIZE=300
+      - DOZZLE_FILTER="status=running"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - logging_network
+      - proxy_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dozzle.rule=Host(`logs.${PRIMARY_DOMAIN}`) || Host(`logs.${SECONDARY_DOMAIN}`)"
+      - "traefik.http.routers.dozzle.tls=true"
+      - "traefik.http.routers.dozzle.tls.certresolver=${CERT_RESOLVER}"
+      - "traefik.http.services.dozzle.loadbalancer.server.port=8080"
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  logging_network:
+    driver: bridge
+    internal: false
+  proxy_network:
+    external: true
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  loki_data:
+  promtail_data:
+  elasticsearch_data:
+  filebeat_data:
+  graylog_mongo_data:
+  graylog_opensearch_data:
+  graylog_data:
+
+#############################################
+

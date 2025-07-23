@@ -1,0 +1,10 @@
+
+# Ignore Docker-related temporary files/directories
+*.swp
+*.bak
+.DS_Store # macOS specific
+*/temp/
+*/tmp/
+*/cache/
+*.log
+!*.log # If you have specific log files you do want to track, you can un-ignore them with a !

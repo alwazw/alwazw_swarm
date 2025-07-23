@@ -1,0 +1,203 @@
+version: '3.8'
+
+services:
+  # Database Services
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    network_mode: host
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    secrets:
+      - postgres_password
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    network_mode: host
+    volumes:
+      - redis_data:/data
+
+  mariadb:
+    container_name: mariadb
+    image: lscr.io/linuxserver/mariadb:latest
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-America/Toronto}
+      MYSQL_DATABASE: maria_db
+      MYSQL_USER: ${MYSQL_USER:-mariauser}
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_user_password
+    volumes:
+      - mariadb_config:/config
+    secrets:
+      - mysql_root_password
+      - mysql_user_password
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    network_mode: host
+    environment:
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_DEFAULT_EMAIL_FILE: /run/secrets/pgadmin_email
+      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/pgadmin_password
+      PGADMIN_LISTEN_PORT: 8080
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    secrets:
+      - pgadmin_email
+      - pgadmin_password
+
+  # Analytics Services
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    restart: always
+    network_mode: host
+    environment:
+      GF_SERVER_HTTP_PORT: 3000
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD_FILE: /run/secrets/grafana_password
+    volumes:
+      - grafana_config:/etc/grafana
+      - grafana_data:/var/lib/grafana
+      - grafana_plugins:/var/lib/grafana/plugins
+    secrets:
+      - grafana_password
+
+  # Networking Services
+  librespeed:
+    container_name: librespeed
+    image: lscr.io/linuxserver/librespeed:latest
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-America/Toronto}
+      PASSWORD_FILE: /run/secrets/librespeed_password
+      IPINFO_APIKEY: ${IPINFO_APIKEY:-}
+    volumes:
+      - librespeed_config:/config
+    secrets:
+      - librespeed_password
+
+  # Dashboard Services
+  heimdall:
+    container_name: heimdall
+    image: lscr.io/linuxserver/heimdall:latest
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-America/Toronto}
+    volumes:
+      - heimdall_config:/config
+
+  # Security Services
+  vaultwarden:
+    container_name: vaultwarden
+    image: vaultwarden/server:latest
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      ROCKET_PORT: 8083
+    volumes:
+      - vaultwarden_data:/data
+
+  # Media Services
+  plex:
+    container_name: plex
+    image: lscr.io/linuxserver/plex:latest
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-America/Toronto}
+      VERSION: docker
+      PLEX_CLAIM: ${PLEX_CLAIM:-}
+    volumes:
+      - plex_config:/config
+      - ${MEDIA_PATH:-/home/ubuntu/media}:/media
+
+  # Automation Services
+  n8n:
+    container_name: n8n
+    image: n8nio/n8n:1.102.4
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-America/Toronto}
+      N8N_HOST: ${N8N_HOST:-localhost}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost:5678/}
+      GENERIC_TIMEZONE: ${TZ:-America/Toronto}
+      NODE_ENV: production
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+  home_assistant:
+    container_name: home_assistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      TZ: ${TZ:-America/Toronto}
+    volumes:
+      - home_assistant_config:/config
+      - /etc/localtime:/etc/localtime:ro
+
+volumes:
+  # Database Volumes
+  postgres_data:
+  redis_data:
+  mariadb_config:
+  pgadmin_data:
+  # Analytics Volumes
+  grafana_config:
+  grafana_data:
+  grafana_plugins:
+  # Networking Volumes
+  librespeed_config:
+  # Dashboard Volumes
+  heimdall_config:
+  # Security Volumes
+  vaultwarden_data:
+  # Media Volumes
+  plex_config:
+  # Automation Volumes
+  n8n_data:
+  home_assistant_config:
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  mysql_root_password:
+    file: ./secrets/mysql_root_password.txt
+  mysql_user_password:
+    file: ./secrets/mysql_user_password.txt
+  pgadmin_email:
+    file: ./secrets/pgadmin_email.txt
+  pgadmin_password:
+    file: ./secrets/pgadmin_password.txt
+  grafana_password:
+    file: ./secrets/grafana_password.txt
+  librespeed_password:
+    file: ./secrets/librespeed_password.txt
+

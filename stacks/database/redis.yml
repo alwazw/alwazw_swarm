@@ -1,0 +1,28 @@
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - database_network
+
+networks:
+  database_network:
+    external: true
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  mysql_root_password:
+    file: ./secrets/mysql_root_password.txt
+  mysql_user_password:
+    file: ./secrets/mysql_user_password.txt
+  pgadmin_email:
+    file: ./secrets/pgadmin_email.txt
+  pgadmin_password:
+    file: ./secrets/pgadmin_password.txt
+    

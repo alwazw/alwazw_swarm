@@ -1,0 +1,44 @@
+services:
+  librespeed:
+    <<: *default-app-config # Extend common settings
+    container_name: librespeed
+    image: lscr.io/linuxserver/librespeed:latest
+    ports:
+      - "${LIBRESPEED_PORT}:80"
+    environment:
+      CUSTOM_RESULTS: false
+      IPINFO_APIKEY: ${IPINFO_APIKEY}
+      PASSWORD_FILE: /run/secrets/librespeed_password
+    volumes:
+      - librespeed_config:/config # Changed to named volume
+    networks:
+      - networking_network
+    secrets:
+      - librespeed_password
+
+  adguardhome:
+    container_name: adguardhome
+    image: adguard/adguardhome
+    restart: unless-stopped
+    ports:
+      - "${ADGUARD_DNS_PORT}:53/tcp"
+      - "${ADGUARD_DNS_PORT}:53/udp"
+      - "${ADGUARD_WEB_PORT}:3000/tcp"
+  #    - "${ADGUARD_DOH_PORT}:443/tcp"
+      - "${ADGUARD_DOT_PORT}:853/tcp"
+      - "${ADGUARD_QUIC_PORT}:784/udp"
+  #    - "${ADGUARD_HTTP_PORT}:80/tcp"
+    volumes:
+      - adguardhome_work:/opt/adguardhome/work # Changed to named volume
+      - adguardhome_conf:/opt/adguardhome/conf # Changed to named volume
+    networks:
+      - networking_network
+
+networks:
+  networking_network:
+    external: true
+
+secrets:
+  librespeed_password:
+    file: ./secrets/librespeed_password.txt
+

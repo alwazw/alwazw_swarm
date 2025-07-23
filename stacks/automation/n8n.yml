@@ -1,0 +1,39 @@
+
+
+# automation.yml
+version: '3.8'
+
+services:
+  n8n:
+    <<: *default-app-config # Extend common settings
+    container_name: n8n
+    image: n8nio/n8n:1.102.4
+    ports:
+      - "${N8N_PORT}:5678"
+    environment:
+      N8N_HOST: ${N8N_HOST}
+      N8N_PORT: 5678 # Explicitly set in container, even if same as host port
+      N8N_PROTOCOL: http # or https if you use a reverse proxy
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL}
+      GENERIC_TIMEZONE: ${TZ}
+      NODE_ENV: production
+    volumes:
+      - n8n_data:/home/node/.n8n # Changed to named volume
+    networks:
+      - automation_network
+
+  home_assistant:
+    container_name: home_assistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    restart: unless-stopped # Overrides default-app-config restart policy if needed
+    ports:
+      - "${HOME_ASSISTANT_PORT}:8123"
+    volumes:
+      - home_assistant_config:/config # Changed to named volume
+      - /etc/localtime:/etc/localtime:ro # This remains a bind mount, it's a host system file
+    networks:
+      - automation_network
+
+networks:
+  automation_network:
+    external: true

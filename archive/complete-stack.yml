@@ -1,0 +1,330 @@
+version: '3.8'
+
+# Define a common service template for reuse
+x-common-service: &default-app-config
+  restart: unless-stopped
+  environment:
+    PUID: ${PUID:-1000}
+    PGID: ${PGID:-1000}
+    TZ: ${TZ:-America/Toronto}
+
+services:
+  # Database Services
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - database_network
+    secrets:
+      - postgres_password
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - database_network
+
+  mariadb:
+    container_name: mariadb
+    image: lscr.io/linuxserver/mariadb:latest
+    <<: *default-app-config
+    ports:
+      - "${MARIADB_PORT:-3306}:3306"
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-America/Toronto}
+      MYSQL_DATABASE: maria_db
+      MYSQL_USER: ${MYSQL_USER:-mariauser}
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_user_password
+    volumes:
+      - mariadb_config:/config
+    networks:
+      - database_network
+    secrets:
+      - mysql_root_password
+      - mysql_user_password
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    ports:
+      - "${PGADMIN_PORT:-8080}:80"
+    environment:
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_DEFAULT_EMAIL_FILE: /run/secrets/pgadmin_email
+      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/pgadmin_password
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - database_network
+    secrets:
+      - pgadmin_email
+      - pgadmin_password
+
+  # Analytics Services
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    restart: always
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD_FILE: /run/secrets/grafana_password
+    volumes:
+      - grafana_config:/etc/grafana
+      - grafana_data:/var/lib/grafana
+      - grafana_plugins:/var/lib/grafana/plugins
+    networks:
+      - analytics_network
+      - database_network
+    secrets:
+      - grafana_password
+
+  # Networking Services
+  librespeed:
+    container_name: librespeed
+    image: lscr.io/linuxserver/librespeed:latest
+    <<: *default-app-config
+    ports:
+      - "${LIBRESPEED_PORT:-8081}:80"
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-America/Toronto}
+      PASSWORD_FILE: /run/secrets/librespeed_password
+      IPINFO_APIKEY: ${IPINFO_APIKEY:-}
+    volumes:
+      - librespeed_config:/config
+    networks:
+      - networking_network
+    secrets:
+      - librespeed_password
+
+  adguardhome:
+    container_name: adguardhome
+    image: adguard/adguardhome:latest
+    restart: unless-stopped
+    ports:
+      - "${ADGUARD_DNS_PORT:-53}:53/tcp"
+      - "${ADGUARD_DNS_PORT:-53}:53/udp"
+      - "${ADGUARD_DOT_PORT:-853}:853/tcp"
+      - "${ADGUARD_QUIC_PORT:-784}:784/udp"
+      - "${ADGUARD_WEB_PORT:-3001}:3000/tcp"
+    volumes:
+      - adguardhome_work:/opt/adguardhome/work
+      - adguardhome_conf:/opt/adguardhome/conf
+    networks:
+      - networking_network
+
+  # Security Services
+  vaultwarden:
+    container_name: vaultwarden
+    image: vaultwarden/server:latest
+    restart: unless-stopped
+    ports:
+      - "${VAULTWARDEN_PORT:-8083}:80"
+    volumes:
+      - vaultwarden_data:/data
+    networks:
+      - security_network
+
+  wazuh_manager:
+    container_name: wazuh_manager
+    image: wazuh/wazuh-manager:4.9.2
+    restart: unless-stopped
+    ports:
+      - "1514:1514"
+      - "1515:1515"
+      - "${WAZUH_MANAGER_API_PORT:-55000}:55000"
+    environment:
+      WAZUH_MANAGER_HOSTNAME: wazuh-manager
+    volumes:
+      - wazuh_manager_data:/var/ossec/data
+      - wazuh_manager_certs:/etc/ssl/certs
+    networks:
+      - wazuh_network
+
+  wazuh_indexer:
+    container_name: wazuh_indexer
+    image: wazuh/wazuh-indexer:4.9.2
+    restart: unless-stopped
+    ports:
+      - "${WAZUH_INDEXER_PORT:-9200}:9200"
+    environment:
+      discovery.type: single-node
+      bootstrap.memory_lock: true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - wazuh_indexer_data:/var/lib/wazuh-indexer
+    networks:
+      - wazuh_network
+
+  wazuh_dashboard:
+    container_name: wazuh_dashboard
+    image: wazuh/wazuh-dashboard:4.9.2
+    restart: unless-stopped
+    ports:
+      - "${WAZUH_DASHBOARD_PORT:-5601}:5601"
+    environment:
+      WAZUH_INDEXER_URL: https://wazuh_indexer:9200
+      WAZUH_MANAGER_URL: https://wazuh_manager:55000
+    volumes:
+      - wazuh_dashboard_data:/usr/share/wazuh-dashboard/data
+    networks:
+      - wazuh_network
+    depends_on:
+      - wazuh_indexer
+      - wazuh_manager
+
+  # Dashboard Services
+  heimdall:
+    container_name: heimdall
+    image: lscr.io/linuxserver/heimdall:latest
+    <<: *default-app-config
+    ports:
+      - "${HEIMDALL_HTTP_PORT:-80}:80"
+      - "${HEIMDALL_HTTPS_PORT:-443}:443"
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-America/Toronto}
+    volumes:
+      - heimdall_config:/config
+    networks:
+      - dashboard_network
+
+  # Media Services
+  plex:
+    container_name: plex
+    image: lscr.io/linuxserver/plex:latest
+    <<: *default-app-config
+    ports:
+      - "${PLEX_PORT:-32400}:32400"
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-America/Toronto}
+      VERSION: docker
+    volumes:
+      - plex_config:/config
+      - ${MEDIA_PATH:-/home/ubuntu/media}:/media
+    networks:
+      - media_network
+
+  # Automation Services
+  n8n:
+    <<: *default-app-config
+    container_name: n8n
+    image: n8nio/n8n:1.102.4
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-America/Toronto}
+      N8N_HOST: ${N8N_HOST:-localhost}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost:5678/}
+      GENERIC_TIMEZONE: ${TZ:-America/Toronto}
+      NODE_ENV: production
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - automation_network
+
+  home_assistant:
+    container_name: home_assistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    restart: unless-stopped
+    ports:
+      - "${HOME_ASSISTANT_PORT:-8123}:8123"
+    volumes:
+      - home_assistant_config:/config
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - automation_network
+
+networks:
+  database_network:
+    driver: bridge
+  networking_network:
+    driver: bridge
+  dashboard_network:
+    driver: bridge
+  analytics_network:
+    driver: bridge
+  media_network:
+    driver: bridge
+  automation_network:
+    driver: bridge
+  security_network:
+    driver: bridge
+  wazuh_network:
+    driver: bridge
+
+volumes:
+  # Database Volumes
+  postgres_data:
+  redis_data:
+  mariadb_config:
+  pgadmin_data:
+  # Analytics Volumes
+  grafana_config:
+  grafana_data:
+  grafana_plugins:
+  # Networking Volumes
+  librespeed_config:
+  adguardhome_work:
+  adguardhome_conf:
+  # Security Volumes
+  vaultwarden_data:
+  wazuh_manager_data:
+  wazuh_manager_certs:
+  wazuh_indexer_data:
+  wazuh_dashboard_data:
+  # Dashboard Volumes
+  heimdall_config:
+  # Media Volumes
+  plex_config:
+  # Automation Volumes
+  n8n_data:
+  home_assistant_config:
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  mysql_root_password:
+    file: ./secrets/mysql_root_password.txt
+  mysql_user_password:
+    file: ./secrets/mysql_user_password.txt
+  pgadmin_email:
+    file: ./secrets/pgadmin_email.txt
+  pgadmin_password:
+    file: ./secrets/pgadmin_password.txt
+  grafana_password:
+    file: ./secrets/grafana_password.txt
+  librespeed_password:
+    file: ./secrets/librespeed_password.txt
+

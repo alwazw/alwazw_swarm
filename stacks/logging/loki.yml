@@ -1,0 +1,44 @@
+
+# =============================================================================
+# LOKI - Log Aggregation & Storage
+# =============================================================================
+
+services:
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+      - ./config/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+    networks:
+      - logging_network
+      - proxy_network
+
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  logging_network:
+    driver: bridge
+    internal: false
+  proxy_network:
+    external: true
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  loki_data:
+  promtail_data:
+  elasticsearch_data:
+  filebeat_data:
+  graylog_mongo_data:
+  graylog_opensearch_data:
+  graylog_data:
+
+#############################################
+
+
