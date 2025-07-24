@@ -1,21 +1,17 @@
 services:
   vaultwarden:
-    <<: *default-app-config # Extend common settings
-    container_name: vaultwarden
+    extends:
+      file: ../../_base.yml
+      service: common-base
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_vaultwarden
     image: ghcr.io/dani-garcia/vaultwarden:latest
-    restart: always
     ports:
-      - "${VAULTWARDEN_PORT}:80"
+      - "${VAULTWARDEN_PORT:-8083}:80"
     environment:
       - WEBSOCKET_ENABLED=true
-      - SIGNUPS_ALLOWED=false # Set to true initially, then false
+      - SIGNUPS_ALLOWED=false
+      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
     volumes:
-      - vaultwarden_data:/data # Changed to named volume
+      - vaultwarden_data:/data
     networks:
       - security_network
-
-networks:
-  security_network:
-    external: true
-  wazuh_network:
-    external: true

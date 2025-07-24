@@ -1,1 +1,15 @@
+services:
+  uptime-kuma:
+    extends:
+      file: ../../_base.yml
+      service: common-base
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_uptime_kuma
+    image: louislam/uptime-kuma:latest
+    ports:
+      - "${UPTIME_KUMA_PORT:-3002}:3001"
+    volumes:
+      - uptime_kuma_data:/app/data
+    networks:
+      - monitoring_network
+    restart: unless-stopped
 

@@ -10,6 +10,9 @@ include:
   - path: ./stacks/analytics/grafana.yml
   - path: ./stacks/nextcloud/nextcloud.yml
   - path: ./stacks/networking/cloudflared.yml
+  - path: ./stacks/dashboards/heimdall.yml
+  - path: ./stacks/monitoring/uptime_kuma.yml
+  - path: ./stacks/security/vaultwarden.yml
 
 # Secrets are defined here because they are referred to by included services.
 secrets:
@@ -45,6 +48,15 @@ networks:
   nextcloud_network:
     name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_nextcloud_network
     driver: bridge
+  dashboard_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_dashboard_network
+    driver: bridge
+  monitoring_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_monitoring_network
+    driver: bridge
+  security_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_security_network
+    driver: bridge
 
 # All named volumes should be defined here
 volumes:
@@ -62,3 +74,9 @@ volumes:
     name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_nextcloud_data
   nextcloud_config:
     name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_nextcloud_config
+  heimdall_config:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_heimdall_config
+  uptime_kuma_data:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_uptime_kuma_data
+  vaultwarden_data:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_vaultwarden_data
