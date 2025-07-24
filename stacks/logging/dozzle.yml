@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_dozzle
+    restart: unless-stopped
+    ports:
+      - "${DOZZLE_PORT:-8080}:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - logging_network
+networks:
+  logging_network:
+    external: true

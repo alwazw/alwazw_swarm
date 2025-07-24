@@ -1,1 +1,15 @@
-
+version: '3.8'
+services:
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_mailhog
+    restart: unless-stopped
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_WEB_PORT:-8025}:8025"
+    networks:
+      - email_network
+volumes:
+networks:
+  email_network:
+    external: true

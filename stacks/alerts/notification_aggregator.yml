@@ -1,1 +1,32 @@
+version: '3.8'
+
+services:
+  notification_aggregator:
+    image: caronc/apprise:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_notification_aggregator
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    ports:
+      - "${APPRISE_PORT:-8000}:8000"
+    volumes:
+      - apprise_config:/config
+      - apprise_data:/data
+    networks:
+      - alert_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.apprise.rule=Host(`notify.${DOMAIN}`)"
+      - "traefik.http.services.apprise.loadbalancer.server.port=8000"
+      - "traefik.docker.network=traefik_network"
+
+volumes:
+  apprise_config:
+  apprise_data:
+
+networks:
+  alert_network:
+    external: true
 

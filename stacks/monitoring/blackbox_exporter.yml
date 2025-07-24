@@ -1,1 +1,15 @@
-
+version: '3.8'
+services:
+  blackbox_exporter:
+    image: prom/blackbox-exporter:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_blackbox_exporter
+    restart: unless-stopped
+    ports:
+      - "${BLACKBOX_EXPORTER_PORT:-9115}:9115"
+    volumes:
+      - ./config/blackbox:/etc/blackbox_exporter
+    networks:
+      - monitoring_network
+networks:
+  monitoring_network:
+    external: true

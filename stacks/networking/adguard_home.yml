@@ -1,1 +1,21 @@
-
+version: '3.8'
+services:
+  adguard:
+    image: adguard/adguardhome:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_adguard
+    restart: unless-stopped
+    ports:
+      - "${ADGUARD_PORT:-3080}:3000"
+      - "${ADGUARD_DNS_PORT:-53}:53/tcp"
+      - "${ADGUARD_DNS_PORT:-53}:53/udp"
+    volumes:
+      - adguard_work:/opt/adguardhome/work
+      - adguard_conf:/opt/adguardhome/conf
+    networks:
+      - networking_network
+volumes:
+  adguard_work:
+  adguard_conf:
+networks:
+  networking_network:
+    external: true

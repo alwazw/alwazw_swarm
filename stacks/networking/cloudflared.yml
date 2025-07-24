@@ -1,14 +1,12 @@
+version: '3.8'
 services:
   cloudflared:
-    extends:
-      file: ../../_base.yml
-      service: common-base
-    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_cloudflared
     image: cloudflare/cloudflared:latest
-    command: tunnel --no-autoupdate run
-    environment:
-      TUNNEL_TOKEN_FILE: /run/secrets/cloudflare_tunnel_token
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
     networks:
-      - nextcloud_network
-    secrets:
-      - cloudflare_tunnel_token
+      - networking_network
+networks:
+  networking_network:
+    external: true

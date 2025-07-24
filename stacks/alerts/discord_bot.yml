@@ -1,1 +1,23 @@
+version: '3.8'
+
+services:
+  discord_bot:
+    image: benjojo/alertmanager-discord:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_discord_bot
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - DISCORD_WEBHOOK=${DISCORD_WEBHOOK_URL}
+    ports:
+      - "${DISCORD_BOT_PORT:-9094}:9094"
+    networks:
+      - alert_network
+    depends_on:
+      - alertmanager
+    labels:
+      - "traefik.enable=false"
+
+networks:
+  alert_network:
+    external: true
 

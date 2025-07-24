@@ -1,122 +1,31 @@
-
-# =============================================================================
-# PHOTOPRISM - Photo Management & AI
-# =============================================================================
-
+version: '3.8'
 services:
   photoprism:
     image: photoprism/photoprism:latest
-    container_name: photoprism
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_photoprism
     restart: unless-stopped
-    security_opt:
-      - seccomp:unconfined
-      - apparmor:unconfined
     environment:
-      - PHOTOPRISM_ADMIN_PASSWORD=${USER_PASSWORD}
-      - PHOTOPRISM_SITE_URL=https://photos.${PRIMARY_DOMAIN}/
-      - PHOTOPRISM_ORIGINALS_LIMIT=5000
-      - PHOTOPRISM_HTTP_COMPRESSION=gzip
-      - PHOTOPRISM_LOG_LEVEL=info
-      - PHOTOPRISM_READONLY=false
-      - PHOTOPRISM_EXPERIMENTAL=false
-      - PHOTOPRISM_DISABLE_CHOWN=false
-      - PHOTOPRISM_DISABLE_WEBDAV=false
-      - PHOTOPRISM_DISABLE_SETTINGS=false
-      - PHOTOPRISM_DISABLE_TENSORFLOW=false
-      - PHOTOPRISM_DISABLE_FACES=false
-      - PHOTOPRISM_DISABLE_CLASSIFICATION=false
-      - PHOTOPRISM_DISABLE_RAW=false
-      - PHOTOPRISM_RAW_PRESETS=false
-      - PHOTOPRISM_JPEG_QUALITY=85
-      - PHOTOPRISM_DETECT_NSFW=false
-      - PHOTOPRISM_UPLOAD_NSFW=true
+      - PHOTOPRISM_ADMIN_PASSWORD=${PHOTOPRISM_PASSWORD}
+      - PHOTOPRISM_HTTP_PORT=2342
       - PHOTOPRISM_DATABASE_DRIVER=mysql
-      - PHOTOPRISM_DATABASE_SERVER=photoprism-db:3306
-      - PHOTOPRISM_DATABASE_NAME=photoprism
-      - PHOTOPRISM_DATABASE_USER=photoprism
-      - PHOTOPRISM_DATABASE_PASSWORD=${MYSQL_PASSWORD}
-      - PHOTOPRISM_SITE_CAPTION=AI-Powered Photos
-      - PHOTOPRISM_SITE_DESCRIPTION=Browse Your Life in Pictures
-      - PHOTOPRISM_SITE_AUTHOR=${USERNAME}
+      - PHOTOPRISM_DATABASE_SERVER=mariadb:3306
+      - PHOTOPRISM_DATABASE_NAME=${PHOTOPRISM_DB_NAME:-photoprism}
+      - PHOTOPRISM_DATABASE_USER=${PHOTOPRISM_DB_USER:-photoprism}
+      - PHOTOPRISM_DATABASE_PASSWORD=${PHOTOPRISM_DB_PASSWORD}
+    ports:
+      - "${PHOTOPRISM_PORT:-8097}:2342"
     volumes:
-      - ${MEDIA_PHOTOS_PATH}:/photoprism/originals
       - photoprism_storage:/photoprism/storage
+      - ${PHOTOPRISM_PHOTOS_PATH:-/data/photos}:/photoprism/originals:ro
+    networks:
+      - utility_network
+      - database_network
     depends_on:
-      - photoprism-db
-    networks:
-      - media_network
-      - proxy_network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.photoprism.rule=Host(`photos.${PRIMARY_DOMAIN}`) || Host(`photos.${SECONDARY_DOMAIN}`)"
-      - "traefik.http.routers.photoprism.tls=true"
-      - "traefik.http.routers.photoprism.tls.certresolver=${CERT_RESOLVER}"
-      - "traefik.http.services.photoprism.loadbalancer.server.port=2342"
-
-  # PhotoPrism Database
-  photoprism-db:
-    image: mariadb:latest
-    container_name: photoprism-db
-    restart: unless-stopped
-    security_opt:
-      - seccomp:unconfined
-      - apparmor:unconfined
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_DATABASE=photoprism
-      - MYSQL_USER=photoprism
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-    volumes:
-      - photoprism_db_data:/var/lib/mysql
-    networks:
-      - media_network
-    command: mysqld --innodb-buffer-pool-size=512M --transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=512 --innodb-rollback-on-timeout=OFF --innodb-lock-wait-timeout=120
-
-
-
-# =============================================================================
-# NETWORKS
-# =============================================================================
-networks:
-  nextcloud_network:
-    driver: bridge
-    internal: false
-  media_network:
-    driver: bridge
-    internal: false
-  proxy_network:
-    external: true
-
-# =============================================================================
-# VOLUMES
-# =============================================================================
+      - mariadb
 volumes:
-  # Nextcloud
-  nextcloud_data:
-  nextcloud_db_data:
-  
-  # Syncthing
-  syncthing_config:
-  
-  # Plex
-  plex_config:
-  
-  # Jellyfin
-  jellyfin_config:
-  
-  # PhotoPrism
   photoprism_storage:
-  photoprism_db_data:
-  
-  # Immich
-  immich_model_cache:
-  immich_postgres_data:
-  
-  # FileBrowser
-  filebrowser_config:
-  filebrowser_database:
-  
-  # Duplicati
-  duplicati_config:
-
-##############################################################33
+networks:
+  utility_network:
+    external: true
+  database_network:
+    external: true

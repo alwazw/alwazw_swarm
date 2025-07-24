@@ -1,45 +1,19 @@
-# =============================================================================
-# FILEBEAT - Log Shipper for ELK Stack (Optional)
-# =============================================================================
-
+version: '3.8'
 services:
   filebeat:
     image: docker.elastic.co/beats/filebeat:8.11.0
-    container_name: filebeat
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_filebeat
     restart: unless-stopped
     user: root
     volumes:
-      - ./config/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./config/filebeat:/usr/share/filebeat/filebeat.yml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/log:/var/log:ro
-      - filebeat_data:/usr/share/filebeat/data
-    depends_on:
-      - elasticsearch
     networks:
       - logging_network
-    command: filebeat -e -strict.perms=false
-
-# =============================================================================
-# NETWORKS
-# =============================================================================
+    depends_on:
+      - elasticsearch
 networks:
   logging_network:
-    driver: bridge
-    internal: false
-  proxy_network:
     external: true
-
-# =============================================================================
-# VOLUMES
-# =============================================================================
-volumes:
-  loki_data:
-  promtail_data:
-  elasticsearch_data:
-  filebeat_data:
-  graylog_mongo_data:
-  graylog_opensearch_data:
-  graylog_data:
-
-#############################################

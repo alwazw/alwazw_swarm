@@ -1,1 +1,32 @@
+version: '3.8'
+
+services:
+  telegram_bot:
+    image: metalmatze/alertmanager-bot:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_telegram_bot
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - ALERTMANAGER_URL=http://alertmanager:9093
+      - BOLT_PATH=/data/bot.db
+      - STORE=bolt
+      - TELEGRAM_ADMIN=${TELEGRAM_ADMIN_ID}
+      - TELEGRAM_TOKEN=${TELEGRAM_BOT_TOKEN}
+    ports:
+      - "${TELEGRAM_BOT_PORT:-9095}:8080"
+    volumes:
+      - telegram_bot_data:/data
+    networks:
+      - alert_network
+    depends_on:
+      - alertmanager
+    labels:
+      - "traefik.enable=false"
+
+volumes:
+  telegram_bot_data:
+
+networks:
+  alert_network:
+    external: true
 

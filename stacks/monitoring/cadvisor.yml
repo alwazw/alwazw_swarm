@@ -1,1 +1,19 @@
-
+version: '3.8'
+services:
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_cadvisor
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "${CADVISOR_PORT:-8080}:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    networks:
+      - monitoring_network
+networks:
+  monitoring_network:
+    external: true

@@ -1,1 +1,20 @@
-
+version: '3.8'
+services:
+  gotify:
+    image: gotify/server:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_gotify
+    restart: unless-stopped
+    environment:
+      - GOTIFY_DEFAULTUSER_NAME=${GOTIFY_USER:-alwazw}
+      - GOTIFY_DEFAULTUSER_PASS=${GOTIFY_PASSWORD}
+    ports:
+      - "${GOTIFY_PORT:-8082}:80"
+    volumes:
+      - gotify_data:/app/data
+    networks:
+      - networking_network
+volumes:
+  gotify_data:
+networks:
+  networking_network:
+    external: true

@@ -1,84 +1,24 @@
-# =============================================================================
-# SYNCTHING - Peer-to-Peer File Synchronization
-# =============================================================================
-
+version: '3.8'
 services:
   syncthing:
     image: lscr.io/linuxserver/syncthing:latest
-    container_name: syncthing
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_syncthing
     restart: unless-stopped
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=${TZ}
+    ports:
+      - "${SYNCTHING_PORT:-8384}:8384"
+      - "${SYNCTHING_SYNC_PORT:-22000}:22000/tcp"
+      - "${SYNCTHING_DISCOVERY_PORT:-21027}:21027/udp"
     volumes:
       - syncthing_config:/config
-      - ${MEDIA_BASE_PATH}:/data
-      - ${MEDIA_PHOTOS_PATH}:/data/photos
-      - ${MEDIA_DOCUMENTS_PATH}:/data/documents
-      - ${MEDIA_VIDEOS_PATH}:/data/videos
-      - ${MEDIA_MUSIC_PATH}:/data/music
-      - ${MEDIA_DOWNLOADS_PATH}:/data/downloads
-    ports:
-      - "${SYNCTHING_GUI_PORT}:8384"
-      - "${SYNCTHING_LISTEN_PORT}:22000/tcp"
-      - "${SYNCTHING_LISTEN_PORT}:22000/udp"
-      - "${SYNCTHING_DISCOVERY_PORT}:21027/udp"
+      - ${SYNCTHING_DATA_PATH:-/data/sync}:/data
     networks:
-      - media_network
-      - proxy_network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.syncthing.rule=Host(`sync.${PRIMARY_DOMAIN}`) || Host(`sync.${SECONDARY_DOMAIN}`)"
-      - "traefik.http.routers.syncthing.tls=true"
-      - "traefik.http.routers.syncthing.tls.certresolver=${CERT_RESOLVER}"
-      - "traefik.http.services.syncthing.loadbalancer.server.port=8384"
-
-
-# =============================================================================
-# NETWORKS
-# =============================================================================
-networks:
-  nextcloud_network:
-    driver: bridge
-    internal: false
-  media_network:
-    driver: bridge
-    internal: false
-  proxy_network:
-    external: true
-
-# =============================================================================
-# VOLUMES
-# =============================================================================
+      - utility_network
 volumes:
-  # Nextcloud
-  nextcloud_data:
-  nextcloud_db_data:
-  
-  # Syncthing
   syncthing_config:
-  
-  # Plex
-  plex_config:
-  
-  # Jellyfin
-  jellyfin_config:
-  
-  # PhotoPrism
-  photoprism_storage:
-  photoprism_db_data:
-  
-  # Immich
-  immich_model_cache:
-  immich_postgres_data:
-  
-  # FileBrowser
-  filebrowser_config:
-  filebrowser_database:
-  
-  # Duplicati
-  duplicati_config:
-
-##############################################################33
-
+networks:
+  utility_network:
+    external: true

@@ -1,41 +1,16 @@
-# =============================================================================
-# VECTOR - High-Performance Log Router
-# =============================================================================
+version: '3.8'
 services:
   vector:
-    image: timberio/vector:latest-alpine
-    container_name: vector
+    image: timberio/vector:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_vector
     restart: unless-stopped
+    ports:
+      - "${VECTOR_PORT:-8686}:8686"
     volumes:
-      - ./config/vector/vector.toml:/etc/vector/vector.toml:ro
+      - ./config/vector:/etc/vector
       - /var/log:/var/log:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    depends_on:
-      - loki
     networks:
       - logging_network
-
-# =============================================================================
-# NETWORKS
-# =============================================================================
 networks:
   logging_network:
-    driver: bridge
-    internal: false
-  proxy_network:
     external: true
-
-# =============================================================================
-# VOLUMES
-# =============================================================================
-volumes:
-  loki_data:
-  promtail_data:
-  elasticsearch_data:
-  filebeat_data:
-  graylog_mongo_data:
-  graylog_opensearch_data:
-  graylog_data:
-
-#############################################

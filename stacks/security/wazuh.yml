@@ -1,70 +1,23 @@
-
-
+version: '3.8'
 services:
-  wazuh-manager:
-    container_name: wazuh-manager
-    image: wazuh/wazuh-manager:latest # Pin a specific version, e.g., 4.7.2
-    hostname: wazuh-manager
-    restart: always
-    ports:
-      - "${WAZUH_MANAGER_API_PORT}:55000/tcp"
-      - "1514:1514/udp"
-      - "1515:1515/tcp"
+  wazuh:
+    image: wazuh/wazuh-manager:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_wazuh
+    restart: unless-stopped
     environment:
-      WAZUH_PATH: "/var/ossec"
-      DISABLE_SSL: "true" # Keep for testing, but secure in production!
-    volumes:
-      - wazuh_manager_data:/var/ossec # Changed to named volume
-      - wazuh_manager_certs:/usr/share/filebeat/certs # Changed to named volume
-    networks:
-      - wazuh_network
-
-  wazuh-indexer:
-    container_name: wazuh-indexer
-    image: opensearchproject/opensearch:2.11.1
-    hostname: wazuh-indexer
-    restart: always
-    environment:
-      - node.name=wazuh-indexer
-      - cluster.name=wazuh-cluster
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true
-      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
-      - DISABLE_SECURITY_PLUGIN=true # Keep for testing, secure in production!
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - wazuh_indexer_data:/usr/share/opensearch/data # Changed to named volume
+      - WAZUH_MANAGER_ADMIN_USER=${WAZUH_USER:-alwazw}
+      - WAZUH_MANAGER_ADMIN_PASSWORD=${WAZUH_PASSWORD}
     ports:
-      - "${WAZUH_INDEXER_PORT}:9200"
-    networks:
-      - wazuh_network
-
-  wazuh-dashboard:
-    container_name: wazuh-dashboard
-    image: wazuh/wazuh-dashboard:4.7.2
-    hostname: wazuh-dashboard
-    restart: always
-    ports:
-      - "${WAZUH_DASHBOARD_PORT}:5601"
-    environment:
-      SERVER_HOST: "0.0.0.0"
-      OPENSEARCH_HOSTS: '["https://wazuh-indexer:9200"]'
-      WAZUH_MANAGER_HOST: "wazuh-manager"
-      TZ: ${TZ} # Inherited from .env
-      OPENSEARCH_SSL_VERIFY: "false"
-      OPENSEARCH_REQUEST_TIMEOUT: "90000"
-      WAZUH_MANAGER_SSL_VERIFY: "false"
-      WAZUH_MANAGER_TIMEOUT: "90000"
+      - "${WAZUH_PORT:-1514}:1514"
+      - "${WAZUH_API_PORT:-55000}:55000"
     volumes:
-      - wazuh_dashboard_data:/usr/share/wazuh-dashboard/data # Changed to named volume
+      - wazuh_data:/var/ossec/data
+      - wazuh_logs:/var/ossec/logs
     networks:
-      - wazuh_network
-
+      - security_network
+volumes:
+  wazuh_data:
+  wazuh_logs:
 networks:
   security_network:
-    external: true
-  wazuh_network:
     external: true

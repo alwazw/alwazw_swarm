@@ -1,1 +1,28 @@
+version: '3.8'
+
+services:
+  home_assistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_home_assistant
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+    ports:
+      - "${HOME_ASSISTANT_PORT:-8123}:8123"
+    volumes:
+      - home_assistant_config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0  # Z-Wave/Zigbee USB stick (if available)
+    privileged: true
+    network_mode: host  # Required for device discovery
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homeassistant.rule=Host(`home.${DOMAIN}`)"
+      - "traefik.http.services.homeassistant.loadbalancer.server.port=8123"
+      - "traefik.docker.network=traefik_network"
+
+volumes:
+  home_assistant_config:
 

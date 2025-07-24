@@ -1,1 +1,21 @@
-
+version: '3.8'
+services:
+  redis_exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_redis_exporter
+    restart: unless-stopped
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - "${REDIS_EXPORTER_PORT:-9102}:9121"
+    networks:
+      - monitoring_network
+      - database_network
+    depends_on:
+      - redis
+networks:
+  monitoring_network:
+    external: true
+  database_network:
+    external: true

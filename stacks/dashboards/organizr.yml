@@ -1,1 +1,24 @@
-
+version: '3.8'
+services:
+  organizr:
+    image: organizr/organizr:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_organizr
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    ports:
+      - "${ORGANIZR_PORT:-8087}:80"
+    volumes:
+      - organizr_config:/config
+    networks:
+      - dashboard_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.organizr.rule=Host(\`organizr.${DOMAIN}\`)"
+volumes:
+  organizr_config:
+networks:
+  dashboard_network:
+    external: true

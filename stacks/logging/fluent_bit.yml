@@ -1,42 +1,16 @@
-# =============================================================================
-# FLUENT BIT - Alternative Log Processor
-# =============================================================================
-
+version: '3.8'
 services:
-  fluent-bit:
+  fluent_bit:
     image: fluent/fluent-bit:latest
-    container_name: fluent-bit
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_fluent_bit
     restart: unless-stopped
+    ports:
+      - "${FLUENT_BIT_PORT:-24224}:24224"
     volumes:
-      - ./config/fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
-      - ./config/fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf:ro
+      - ./config/fluent-bit:/fluent-bit/etc
       - /var/log:/var/log:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-    depends_on:
-      - loki
     networks:
       - logging_network
-
-# =============================================================================
-# NETWORKS
-# =============================================================================
 networks:
   logging_network:
-    driver: bridge
-    internal: false
-  proxy_network:
     external: true
-
-# =============================================================================
-# VOLUMES
-# =============================================================================
-volumes:
-  loki_data:
-  promtail_data:
-  elasticsearch_data:
-  filebeat_data:
-  graylog_mongo_data:
-  graylog_opensearch_data:
-  graylog_data:
-
-#############################################

@@ -1,0 +1,132 @@
+version: '3.8'
+
+# MASTER DOCKER COMPOSE FILE - ALL 61 SERVICES
+# This file includes all services from the stacks/ directory
+
+include:
+  # Alert Services (5)
+  - stacks/alerts/alert_manager.yml
+  - stacks/alerts/discord_bot.yml
+  - stacks/alerts/notification_aggregator.yml
+  - stacks/alerts/ntfy.yml
+  - stacks/alerts/telegram_bot.yml
+  
+  # Analytics (1)
+  - stacks/analytics/grafana.yml
+  
+  # Automation (2)
+  - stacks/automation/home_assistant.yml
+  - stacks/automation/n8n.yml
+  
+  # Backup Services (5)
+  - stacks/backup/duplicati.yml
+  - stacks/backup/kopia.yml
+  - stacks/backup/rclone.yml
+  - stacks/backup/resilo_sync.yml
+  - stacks/backup/seafile.yml
+  
+  # Dashboard Services (4)
+  - stacks/dashboards/heimdall.yml
+  - stacks/dashboards/homar.yml
+  - stacks/dashboards/homepage.yml
+  - stacks/dashboards/organizr.yml
+  
+  # Database Services (4)
+  - stacks/database/mariadb.yml
+  - stacks/database/pgadmin.yml
+  - stacks/database/postgres.yml
+  - stacks/database/redis.yml
+  
+  # Email Services (2)
+  - stacks/emails/mailhog.yml
+  - stacks/emails/postfix.yml
+  
+  # Logging Services (10)
+  - stacks/logging/dozzle.yml
+  - stacks/logging/elasticsearch.yml
+  - stacks/logging/filebat.yml
+  - stacks/logging/fluent_bit.yml
+  - stacks/logging/graylog.yml
+  - stacks/logging/kibana.yml
+  - stacks/logging/logrotate.yml
+  - stacks/logging/loki.yml
+  - stacks/logging/promtail.yml
+  - stacks/logging/vector.yml
+  
+  # Media Services (2)
+  - stacks/media/jellyfin.yml
+  - stacks/media/plex.yml
+  
+  # Monitoring Services (9)
+  - stacks/monitoring/blackbox_exporter.yml
+  - stacks/monitoring/cadvisor.yml
+  - stacks/monitoring/docker_socket_proxy.yml
+  - stacks/monitoring/grafana_agent.yml
+  - stacks/monitoring/nginx_exporter.yml
+  - stacks/monitoring/node_exporter.yml
+  - stacks/monitoring/prometheus.yml
+  - stacks/monitoring/push_gateway.yml
+  - stacks/monitoring/redis_exporter.yml
+  - stacks/monitoring/uptime_kuma.yml
+  
+  # Networking Services (7)
+  - stacks/networking/adguard_home.yml
+  - stacks/networking/apprise.yml
+  - stacks/networking/cloudflared.yml
+  - stacks/networking/gotify.yml
+  - stacks/networking/librespeed.yml
+  - stacks/networking/traefik.yml
+  - stacks/networking/webhook-relay.yml
+  - stacks/networking/whoami.yml
+  
+  # Nextcloud (1)
+  - stacks/nextcloud/nextcloud.yml
+  
+  # Security Services (2)
+  - stacks/security/vaultwarden.yml
+  - stacks/security/wazuh.yml
+  
+  # Utility Services (5)
+  - stacks/utilities/filebrowser.yml
+  - stacks/utilities/immich.yml
+  - stacks/utilities/librespeed.yml
+  - stacks/utilities/photoprism.yml
+  - stacks/utilities/syncthing.yml
+
+# Global Networks
+networks:
+  traefik_network:
+    driver: bridge
+  monitoring_network:
+    driver: bridge
+  logging_network:
+    driver: bridge
+  database_network:
+    driver: bridge
+  media_network:
+    driver: bridge
+  automation_network:
+    driver: bridge
+  backup_network:
+    driver: bridge
+  security_network:
+    driver: bridge
+  dashboard_network:
+    driver: bridge
+  utility_network:
+    driver: bridge
+  alert_network:
+    driver: bridge
+  email_network:
+    driver: bridge
+  networking_network:
+    driver: bridge
+  nextcloud_network:
+    driver: bridge
+
+# Global Volumes (service-specific volumes are defined in individual service files)
+volumes:
+  shared_data:
+  shared_config:
+  shared_logs:
+

@@ -1,1 +1,13 @@
-
+version: '3.8'
+services:
+  pushgateway:
+    image: prom/pushgateway:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_pushgateway
+    restart: unless-stopped
+    ports:
+      - "${PUSHGATEWAY_PORT:-9091}:9091"
+    networks:
+      - monitoring_network
+networks:
+  monitoring_network:
+    external: true

@@ -1,1 +1,14 @@
-
+version: '3.8'
+services:
+  webhook_relay:
+    image: webhookrelay/webhookrelayd:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_webhook_relay
+    restart: unless-stopped
+    environment:
+      - RELAY_KEY=${WEBHOOK_RELAY_KEY}
+      - RELAY_SECRET=${WEBHOOK_RELAY_SECRET}
+    networks:
+      - networking_network
+networks:
+  networking_network:
+    external: true

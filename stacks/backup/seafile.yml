@@ -1,1 +1,39 @@
+version: '3.8'
+
+services:
+  seafile:
+    image: seafileltd/seafile-mc:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_seafile
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - DB_HOST=mariadb
+      - DB_ROOT_PASSWD=${MYSQL_ROOT_PASSWORD}
+      - SEAFILE_ADMIN_EMAIL=${SEAFILE_ADMIN_EMAIL}
+      - SEAFILE_ADMIN_PASSWORD=${SEAFILE_ADMIN_PASSWORD}
+      - SEAFILE_SERVER_LETSENCRYPT=false
+      - SEAFILE_SERVER_HOSTNAME=seafile.${DOMAIN}
+    ports:
+      - "${SEAFILE_PORT:-8202}:80"
+    volumes:
+      - seafile_data:/shared
+    networks:
+      - backup_network
+      - database_network
+    depends_on:
+      - mariadb
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.seafile.rule=Host(`seafile.${DOMAIN}`)"
+      - "traefik.http.services.seafile.loadbalancer.server.port=80"
+      - "traefik.docker.network=traefik_network"
+
+volumes:
+  seafile_data:
+
+networks:
+  backup_network:
+    external: true
+  database_network:
+    external: true
 

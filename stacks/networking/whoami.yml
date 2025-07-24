@@ -1,1 +1,16 @@
-
+version: '3.8'
+services:
+  whoami:
+    image: traefik/whoami:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_whoami
+    restart: unless-stopped
+    ports:
+      - "${WHOAMI_PORT:-8089}:80"
+    networks:
+      - networking_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(\`whoami.${DOMAIN}\`)"
+networks:
+  networking_network:
+    external: true

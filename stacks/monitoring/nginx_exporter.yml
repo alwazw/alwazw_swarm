@@ -1,1 +1,15 @@
-
+version: '3.8'
+services:
+  nginx_exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_nginx_exporter
+    restart: unless-stopped
+    command:
+      - '-nginx.scrape-uri=http://nginx:8080/nginx_status'
+    ports:
+      - "${NGINX_EXPORTER_PORT:-9101}:9113"
+    networks:
+      - monitoring_network
+networks:
+  monitoring_network:
+    external: true

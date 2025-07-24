@@ -1,1 +1,23 @@
-
+version: '3.8'
+services:
+  apprise:
+    image: caronc/apprise:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_apprise
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    ports:
+      - "${APPRISE_PORT:-8000}:8000"
+    volumes:
+      - apprise_config:/config
+      - apprise_data:/data
+    networks:
+      - networking_network
+volumes:
+  apprise_config:
+  apprise_data:
+networks:
+  networking_network:
+    external: true

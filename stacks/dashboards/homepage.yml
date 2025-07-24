@@ -1,1 +1,25 @@
-
+version: '3.8'
+services:
+  homepage:
+    image: ghcr.io/benphelps/homepage:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_homepage
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    ports:
+      - "${HOMEPAGE_PORT:-8086}:3000"
+    volumes:
+      - homepage_config:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - dashboard_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homepage.rule=Host(\`homepage.${DOMAIN}\`)"
+volumes:
+  homepage_config:
+networks:
+  dashboard_network:
+    external: true

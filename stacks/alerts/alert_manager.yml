@@ -1,1 +1,39 @@
+version: '3.8'
+
+services:
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_alertmanager
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+    ports:
+      - "${ALERTMANAGER_PORT:-9093}:9093"
+    volumes:
+      - alertmanager_data:/alertmanager
+      - ./config/alertmanager:/etc/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+      - '--web.route-prefix=/'
+    networks:
+      - alert_network
+      - monitoring_network
+    depends_on:
+      - prometheus
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.alertmanager.rule=Host(`alerts.${DOMAIN}`)"
+      - "traefik.http.services.alertmanager.loadbalancer.server.port=9093"
+      - "traefik.docker.network=traefik_network"
+
+volumes:
+  alertmanager_data:
+
+networks:
+  alert_network:
+    external: true
+  monitoring_network:
+    external: true
 

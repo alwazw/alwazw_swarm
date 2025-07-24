@@ -1,1 +1,22 @@
-
+version: '3.8'
+services:
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_node_exporter
+    restart: unless-stopped
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--web.listen-address=0.0.0.0:9100'
+    ports:
+      - "${NODE_EXPORTER_PORT:-9100}:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - monitoring_network
+networks:
+  monitoring_network:
+    external: true

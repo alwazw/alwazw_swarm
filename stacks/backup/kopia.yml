@@ -1,1 +1,37 @@
+version: '3.8'
+
+services:
+  kopia:
+    image: kopia/kopia:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_kopia
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - KOPIA_PASSWORD=${KOPIA_PASSWORD}
+      - USER=${KOPIA_USER:-alwazw}
+    ports:
+      - "${KOPIA_PORT:-8201}:51515"
+    volumes:
+      - kopia_config:/app/config
+      - kopia_cache:/app/cache
+      - kopia_logs:/app/logs
+      - ${BACKUP_SOURCE_PATH:-/data}:/data:ro
+      - ${BACKUP_DEST_PATH:-/backups}:/backups
+    networks:
+      - backup_network
+    command: server start --insecure --address=0.0.0.0:51515 --server-username=${KOPIA_USER:-alwazw} --server-password=${KOPIA_PASSWORD}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kopia.rule=Host(`kopia.${DOMAIN}`)"
+      - "traefik.http.services.kopia.loadbalancer.server.port=51515"
+      - "traefik.docker.network=traefik_network"
+
+volumes:
+  kopia_config:
+  kopia_cache:
+  kopia_logs:
+
+networks:
+  backup_network:
+    external: true
 

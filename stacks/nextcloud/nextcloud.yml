@@ -1,24 +1,31 @@
+version: '3.8'
 services:
   nextcloud:
-    extends:
-      file: ../../_base.yml
-      service: common-base
+    image: nextcloud:latest
     container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_nextcloud
-    image: lscr.io/linuxserver/nextcloud:latest
-    ports:
-      - "${NEXTCLOUD_HTTPS_PORT}:443"
+    restart: unless-stopped
     environment:
-      PUID: "${PUID}"
-      PGID: "${PGID}"
-      # TZ is inherited from _base.yml
-      POSTGRES_HOST: "postgres"
-      POSTGRES_DB: "${NEXTCLOUD_DB_NAME}"
-      POSTGRES_USER: "${NEXTCLOUD_DB_USER}"
-      POSTGRES_PASSWORD: "${NEXTCLOUD_DB_PASSWORD}"
+      - MYSQL_HOST=mariadb
+      - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME:-nextcloud}
+      - MYSQL_USER=${NEXTCLOUD_DB_USER:-nextcloud}
+      - MYSQL_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
+      - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER:-alwazw}
+      - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD}
+      - NEXTCLOUD_TRUSTED_DOMAINS=${DOMAIN}
+    ports:
+      - "${NEXTCLOUD_PORT:-8000}:80"
     volumes:
-      - nextcloud_data:/data
-      - nextcloud_config:/config
-      - ${MEDIA_BASE_PATH}:/media
+      - nextcloud_data:/var/www/html
+      - ${NEXTCLOUD_DATA_PATH:-/data/nextcloud}:/var/www/html/data
     networks:
-      - database_network
       - nextcloud_network
+      - database_network
+    depends_on:
+      - mariadb
+volumes:
+  nextcloud_data:
+networks:
+  nextcloud_network:
+    external: true
+  database_network:
+    external: true

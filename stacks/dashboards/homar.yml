@@ -1,1 +1,24 @@
-
+version: '3.8'
+services:
+  homar:
+    image: ghcr.io/ajnart/homarr:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_homar
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+    ports:
+      - "${HOMAR_PORT:-8088}:7575"
+    volumes:
+      - homar_config:/app/data/configs
+      - homar_data:/data
+    networks:
+      - dashboard_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homar.rule=Host(\`homar.${DOMAIN}\`)"
+volumes:
+  homar_config:
+  homar_data:
+networks:
+  dashboard_network:
+    external: true

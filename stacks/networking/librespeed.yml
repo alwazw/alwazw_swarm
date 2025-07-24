@@ -1,1 +1,17 @@
-
+version: '3.8'
+services:
+  librespeed:
+    image: lscr.io/linuxserver/librespeed:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_librespeed
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    ports:
+      - "${LIBRESPEED_PORT:-8081}:80"
+    networks:
+      - networking_network
+networks:
+  networking_network:
+    external: true

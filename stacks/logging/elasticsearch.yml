@@ -1,45 +1,21 @@
-# =============================================================================
-# ELASTICSEARCH - Alternative Log Storage (Optional)
-# =============================================================================
-
+version: '3.8'
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: elasticsearch
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_elasticsearch
     restart: unless-stopped
     environment:
       - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
       - xpack.security.enabled=false
-      - xpack.security.enrollment.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "${ELASTICSEARCH_PORT:-9200}:9200"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
       - logging_network
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-# =============================================================================
-# NETWORKS
-# =============================================================================
+volumes:
+  elasticsearch_data:
 networks:
   logging_network:
-    driver: bridge
-    internal: false
-  proxy_network:
     external: true
-
-# =============================================================================
-# VOLUMES
-# =============================================================================
-volumes:
-  loki_data:
-  promtail_data:
-  elasticsearch_data:
-  filebeat_data:
-  graylog_mongo_data:
-  graylog_opensearch_data:
-  graylog_data:
-
-#############################################

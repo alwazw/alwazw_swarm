@@ -1,1 +1,18 @@
-
+version: '3.8'
+services:
+  postfix:
+    image: boky/postfix:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_postfix
+    restart: unless-stopped
+    environment:
+      - HOSTNAME=${POSTFIX_HOSTNAME}
+      - RELAYHOST=${POSTFIX_RELAYHOST}
+      - RELAYHOST_USERNAME=${POSTFIX_USERNAME}
+      - RELAYHOST_PASSWORD=${POSTFIX_PASSWORD}
+    ports:
+      - "${POSTFIX_PORT:-25}:587"
+    networks:
+      - email_network
+networks:
+  email_network:
+    external: true

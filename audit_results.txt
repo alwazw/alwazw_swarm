@@ -1,0 +1,245 @@
+=== PHASE 1.1: AUDITING ALL 61 YML FILES ===
+--- stacks/alerts/alert_manager.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/alerts/discord_bot.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/alerts/notification_aggregator.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/alerts/ntfy.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/alerts/telegram_bot.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/analytics/grafana.yml ---
+Lines: 67
+STATUS: HAS CONTENT
+
+--- stacks/automation/home_assistant.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/automation/n8n.yml ---
+Lines: 17
+STATUS: HAS CONTENT
+
+--- stacks/backup/duplicati.yml ---
+Lines: 18
+STATUS: HAS CONTENT
+
+--- stacks/backup/kopia.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/backup/rclone.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/backup/resilo_sync.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/backup/seafile.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/dashboards/heimdall.yml ---
+Lines: 20
+STATUS: HAS CONTENT
+
+--- stacks/dashboards/homar.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/dashboards/homepage.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/dashboards/organizr.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/database/mariadb.yml ---
+Lines: 27
+STATUS: HAS CONTENT
+
+--- stacks/database/pgadmin.yml ---
+Lines: 22
+STATUS: HAS CONTENT
+
+--- stacks/database/postgres.yml ---
+Lines: 20
+STATUS: HAS CONTENT
+
+--- stacks/database/redis.yml ---
+Lines: 12
+STATUS: HAS CONTENT
+
+--- stacks/emails/mailhog.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/emails/postfix.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/logging/dozzel.yml ---
+Lines: 49
+STATUS: HAS CONTENT
+
+--- stacks/logging/elasticsearch.yml ---
+Lines: 45
+STATUS: HAS CONTENT
+
+--- stacks/logging/filebat.yml ---
+Lines: 45
+STATUS: HAS CONTENT
+
+--- stacks/logging/fluent_bit.yml ---
+Lines: 42
+STATUS: HAS CONTENT
+
+--- stacks/logging/graylog.yml ---
+Lines: 83
+STATUS: HAS CONTENT
+
+--- stacks/logging/kibana.yml ---
+Lines: 47
+STATUS: HAS CONTENT
+
+--- stacks/logging/logrotate.yml ---
+Lines: 43
+STATUS: HAS CONTENT
+
+--- stacks/logging/loki.yml ---
+Lines: 39
+STATUS: HAS CONTENT
+
+--- stacks/logging/promtail.yml ---
+Lines: 29
+STATUS: HAS CONTENT
+
+--- stacks/logging/vector.yml ---
+Lines: 41
+STATUS: HAS CONTENT
+
+--- stacks/media/jellyfin.yml ---
+Lines: 17
+STATUS: HAS CONTENT
+
+--- stacks/media/plex.yml ---
+Lines: 19
+STATUS: HAS CONTENT
+
+--- stacks/monitoring/blackbox_exporter.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/monitoring/cadvisor.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/monitoring/docker_socket_proxy.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/monitoring/grafana_agent.yml ---
+Lines: 44
+STATUS: HAS CONTENT
+
+--- stacks/monitoring/nginx_exporter.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/monitoring/node_exporter.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/monitoring/prometheus.yml ---
+Lines: 40
+STATUS: HAS CONTENT
+
+--- stacks/monitoring/push_gateway.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/monitoring/redis_exporter.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/monitoring/uptime_kuma.yml ---
+Lines: 15
+STATUS: HAS CONTENT
+
+--- stacks/networking/adguard_home.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/networking/apprise.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/networking/cloudflared.yml ---
+Lines: 14
+STATUS: HAS CONTENT
+
+--- stacks/networking/gotify.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/networking/librespeed.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/networking/traefik.yml ---
+Lines: 77
+STATUS: HAS CONTENT
+
+--- stacks/networking/webhook-relay.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/networking/whoami.yml ---
+Lines: 1
+STATUS: EMPTY/INCOMPLETE
+
+--- stacks/nextcloud/nextcloud.yml ---
+Lines: 24
+STATUS: HAS CONTENT
+
+--- stacks/security/vaultwarden.yml ---
+Lines: 17
+STATUS: HAS CONTENT
+
+--- stacks/security/wazuh.yml ---
+Lines: 70
+STATUS: HAS CONTENT
+
+--- stacks/utilities/filebrowser.yml ---
+Lines: 74
+STATUS: HAS CONTENT
+
+--- stacks/utilities/immich.yml ---
+Lines: 115
+STATUS: HAS CONTENT
+
+--- stacks/utilities/librespeed.yml ---
+Lines: 44
+STATUS: HAS CONTENT
+
+--- stacks/utilities/photoprism.yml ---
+Lines: 122
+STATUS: HAS CONTENT
+
+--- stacks/utilities/syncthing.yml ---
+Lines: 84
+STATUS: HAS CONTENT
+
