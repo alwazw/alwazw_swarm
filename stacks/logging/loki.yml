@@ -1,44 +1,39 @@
-
-# =============================================================================
-# LOKI - Log Aggregation & Storage
-# =============================================================================
+version: '3.8'
 
 services:
   loki:
+    extends:
+      file: ../../_base.yml
+      service: common-base
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_loki
     image: grafana/loki:latest
-    container_name: loki
-    restart: unless-stopped
+    ports:
+      - "${LOKI_PORT}:3100"
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - loki_data:/loki
-      - ./config/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - ./config/loki:/etc/loki
+    environment:
+      - LOKI_AUTH_ENABLED=false
     networks:
       - logging_network
-      - proxy_network
+      - monitoring_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.loki.rule=Host(`loki.${PRIMARY_DOMAIN}`)"
+      - "traefik.http.routers.loki.tls=true"
+      - "traefik.http.routers.loki.tls.certresolver=letsencrypt"
+      - "traefik.http.services.loki.loadbalancer.server.port=3100"
 
-
-# =============================================================================
-# NETWORKS
-# =============================================================================
-networks:
-  logging_network:
-    driver: bridge
-    internal: false
-  proxy_network:
-    external: true
-
-# =============================================================================
-# VOLUMES
-# =============================================================================
 volumes:
   loki_data:
-  promtail_data:
-  elasticsearch_data:
-  filebeat_data:
-  graylog_mongo_data:
-  graylog_opensearch_data:
-  graylog_data:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_loki_data
 
-#############################################
-
+networks:
+  logging_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_logging_network
+    external: true
+  monitoring_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_monitoring_network
+    external: true
 

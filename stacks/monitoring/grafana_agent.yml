@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  grafana_agent:
+    image: grafana/agent:latest
+    container_name: ${COMPOSE_PROJECT_NAME}_grafana_agent
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_AGENT_HTTP_PORT}:12345"
+    volumes:
+      - grafana_agent_data:/etc/agent/data
+      - ./config/grafana_agent:/etc/agent
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    environment:
+      - AGENT_MODE=flow
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/etc/agent/data
+      - /etc/agent/config.river
+    networks:
+      - monitoring_network
+    depends_on:
+      - prometheus
+      - loki
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana-agent.rule=Host(`agent.${PRIMARY_DOMAIN}`)"
+      - "traefik.http.routers.grafana-agent.tls=true"
+      - "traefik.http.routers.grafana-agent.tls.certresolver=letsencrypt"
+      - "traefik.http.services.grafana-agent.loadbalancer.server.port=12345"
+
+volumes:
+  grafana_agent_data:
+    name: ${COMPOSE_PROJECT_NAME}_grafana_agent_data
+
+networks:
+  monitoring_network:
+    name: ${COMPOSE_PROJECT_NAME}_monitoring_network
+    external: true
+

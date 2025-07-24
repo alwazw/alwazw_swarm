@@ -1,0 +1,51 @@
+# Test deployment for sandbox environment
+name: alwazw_swarm_test
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: alwazw_swarm_test_grafana
+    network_mode: host
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_test_data:/var/lib/grafana
+    restart: unless-stopped
+
+  heimdall:
+    image: lscr.io/linuxserver/heimdall:latest
+    container_name: alwazw_swarm_test_heimdall
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Toronto
+    volumes:
+      - heimdall_test_config:/config
+    restart: unless-stopped
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: alwazw_swarm_test_uptime_kuma
+    network_mode: host
+    volumes:
+      - uptime_kuma_test_data:/app/data
+    restart: unless-stopped
+
+  vaultwarden:
+    image: ghcr.io/dani-garcia/vaultwarden:latest
+    container_name: alwazw_swarm_test_vaultwarden
+    network_mode: host
+    environment:
+      - WEBSOCKET_ENABLED=true
+      - SIGNUPS_ALLOWED=false
+    volumes:
+      - vaultwarden_test_data:/data
+    restart: unless-stopped
+
+volumes:
+  grafana_test_data:
+  heimdall_test_config:
+  uptime_kuma_test_data:
+  vaultwarden_test_data:
+

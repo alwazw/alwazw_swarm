@@ -1,0 +1,150 @@
+version: '3.8'
+
+services:
+  # Reverse Proxy - OWNS ports 80 and 443
+  traefik:
+    image: traefik:v3.0
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_traefik
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --log.level=INFO
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  # Analytics & Monitoring
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_grafana
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_SERVER_HTTP_PORT=${GRAFANA_PORT}
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_prometheus
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.listen-address=0.0.0.0:9090'
+    volumes:
+      - ./config/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+
+  uptime_kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_uptime_kuma
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - uptime_kuma_data:/app/data
+
+  # Logging
+  loki:
+    image: grafana/loki:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_loki
+    restart: unless-stopped
+    network_mode: host
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./config/loki:/etc/loki
+      - loki_data:/loki
+
+  # Security - PROPER PORT!
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_vaultwarden
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - WEBSOCKET_ENABLED=true
+      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
+      - ROCKET_PORT=${VAULTWARDEN_PORT}
+    volumes:
+      - vaultwarden_data:/data
+
+  # Dashboards - PROPER PORT!
+  heimdall:
+    image: lscr.io/linuxserver/heimdall:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_heimdall
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - HEIMDALL_HTTP_PORT=${HEIMDALL_HTTP_PORT}
+    volumes:
+      - heimdall_config:/config
+
+  # File Sharing - PROPER PORT!
+  nextcloud:
+    image: nextcloud:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_nextcloud
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}
+      - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD}
+      - APACHE_HTTP_PORT=${NEXTCLOUD_PORT}
+      - APACHE_HTTPS_PORT=8443
+    volumes:
+      - nextcloud_data:/var/www/html
+      - ${NEXTCLOUD_DATA_PATH}:/var/www/html/data
+
+  # Media
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_jellyfin
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - jellyfin_config:/config
+      - ${MEDIA_PATH_MOVIES}:/data/movies
+      - ${MEDIA_PATH_TV}:/data/tvshows
+
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_plex
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VERSION=docker
+    volumes:
+      - plex_config:/config
+      - ${MEDIA_PATH_MOVIES}:/movies
+      - ${MEDIA_PATH_TV}:/tv
+
+volumes:
+  grafana_data:
+  prometheus_data:
+  uptime_kuma_data:
+  loki_data:
+  vaultwarden_data:
+  heimdall_config:
+  nextcloud_data:
+  jellyfin_config:
+  plex_config:
+

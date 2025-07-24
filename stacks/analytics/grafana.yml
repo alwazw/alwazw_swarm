@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   grafana:
     extends:
@@ -11,10 +13,55 @@ services:
       # TZ is inherited from _base.yml
       GF_SECURITY_ADMIN_USER: "${GRAFANA_ADMIN_USER}"
       GF_SECURITY_ADMIN_PASSWORD_FILE: /run/secrets/grafana_password
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_SERVER_DOMAIN: ${PRIMARY_DOMAIN}
+      GF_SERVER_ROOT_URL: https://grafana.${PRIMARY_DOMAIN}
+      GF_DATABASE_TYPE: postgres
+      GF_DATABASE_HOST: postgres:5432
+      GF_DATABASE_NAME: grafana_db
+      GF_DATABASE_USER: grafana_user
+      GF_DATABASE_PASSWORD_FILE: /run/secrets/postgres_password
+      # Enable plugins
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel
     volumes:
       - grafana_data:/var/lib/grafana
+      - grafana_config:/etc/grafana
     networks:
       - database_network
       - analytics_network
+      - monitoring_network
     secrets:
       - grafana_password
+      - postgres_password
+    depends_on:
+      - postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.${PRIMARY_DOMAIN}`)"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+volumes:
+  grafana_data:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_grafana_data
+  grafana_config:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_grafana_config
+
+networks:
+  database_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_database_network
+    external: true
+  analytics_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_analytics_network
+    external: true
+  monitoring_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_monitoring_network
+    external: true
+
+secrets:
+  grafana_password:
+    file: ./secrets/grafana_password.txt
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+

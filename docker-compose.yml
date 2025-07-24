@@ -1,82 +1,147 @@
-# docker-compose.yml
+# docker-compose.yml - Enhanced Business Stack
 name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}
 
 # Component Files to be Included
 include:
-  - path: ./stacks/database/mariadb.yml
-  - path: ./stacks/database/pgadmin.yml
-  - path: ./stacks/database/postgres.yml
-  - path: ./stacks/database/redis.yml
-  - path: ./stacks/analytics/grafana.yml
-  - path: ./stacks/nextcloud/nextcloud.yml
+  # Core Infrastructure
+  - path: ./stacks/networking/traefik.yml
   - path: ./stacks/networking/cloudflared.yml
-  - path: ./stacks/dashboards/heimdall.yml
+  - path: ./stacks/networking/adguard_home.yml
+  
+  # Database Services
+  - path: ./stacks/database/postgres.yml
+  - path: ./stacks/database/mariadb.yml
+  - path: ./stacks/database/redis.yml
+  - path: ./stacks/database/pgadmin.yml
+  
+  # Monitoring & Analytics
+  - path: ./stacks/analytics/grafana.yml
+  - path: ./stacks/monitoring/prometheus.yml
+  - path: ./stacks/monitoring/grafana_agent.yml
   - path: ./stacks/monitoring/uptime_kuma.yml
+  - path: ./stacks/monitoring/node_exporter.yml
+  - path: ./stacks/monitoring/cadvisor.yml
+  - path: ./stacks/monitoring/blackbox_exporter.yml
+  
+  # Logging Stack
+  - path: ./stacks/logging/loki.yml
+  - path: ./stacks/logging/promtail.yml
+  
+  # Business Applications
+  - path: ./stacks/nextcloud/nextcloud.yml
+  - path: ./stacks/dashboards/heimdall.yml
+  
+  # Security
   - path: ./stacks/security/vaultwarden.yml
+  - path: ./stacks/security/wazuh.yml
+  
+  # Automation
+  - path: ./stacks/automation/n8n.yml
+  
+  # Media (keeping both as approved)
+  - path: ./stacks/media/jellyfin.yml
+  - path: ./stacks/media/plex.yml
+  
+  # Utilities
+  - path: ./stacks/utilities/filebrowser.yml
+  - path: ./stacks/utilities/syncthing.yml
+  - path: ./stacks/utilities/duplicati.yml
 
 # Secrets are defined here because they are referred to by included services.
 secrets:
+  # System secrets
   puid:
     file: ./secrets/puid.txt
   pgid:
     file: ./secrets/pgid.txt
+  
+  # Database secrets
   mysql_user:
     file: ./secrets/mysql_user.txt
   mysql_user_password:
     file: ./secrets/mysql_user_password.txt
   mysql_root_password:
     file: ./secrets/mysql_root_password.txt
-  pgadmin_password:
-    file: ./secrets/pgadmin_password.txt
   postgres_user:
     file: ./secrets/postgres_user.txt
   postgres_password:
     file: ./secrets/postgres_password.txt
+  redis_password:
+    file: ./secrets/redis_password.txt
+  
+  # Application secrets
   grafana_password:
     file: ./secrets/grafana_password.txt
+  pgadmin_password:
+    file: ./secrets/pgadmin_password.txt
+  nextcloud_admin_password:
+    file: ./secrets/nextcloud_admin_password.txt
+  authentik_bootstrap_password:
+    file: ./secrets/authentik_bootstrap_password.txt
+  
+  # External service secrets
   cloudflare_tunnel_token:
     file: ./secrets/cloudflare_tunnel_token.txt
 
 # All networks should be defined in the main compose file
 networks:
+  # Service Category Networks
   database_network:
     name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_database_network
     driver: bridge
+  
   analytics_network:
     name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_analytics_network
     driver: bridge
-  nextcloud_network:
-    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_nextcloud_network
-    driver: bridge
-  dashboard_network:
-    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_dashboard_network
-    driver: bridge
+  
   monitoring_network:
     name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_monitoring_network
     driver: bridge
+  
+  logging_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_logging_network
+    driver: bridge
+  
   security_network:
     name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_security_network
     driver: bridge
+  
+  business_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_business_network
+    driver: bridge
+  
+  communication_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_communication_network
+    driver: bridge
+  
+  automation_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_automation_network
+    driver: bridge
+  
+  media_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_media_network
+    driver: bridge
+  
+  utilities_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_utilities_network
+    driver: bridge
+  
+  # Legacy networks (for backward compatibility)
+  nextcloud_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_nextcloud_network
+    driver: bridge
+  
+  dashboard_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_dashboard_network
+    driver: bridge
 
-# All named volumes should be defined here
+# Global volumes for shared data
 volumes:
-  mysql_config:
-    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_mysql_config
-  pgadmin_data:
-    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_pgadmin_data
-  postgres_data:
-    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_postgres_data
-  redis_data:
-    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_redis_data
-  grafana_data:
-    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_grafana_data
-  nextcloud_data:
-    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_nextcloud_data
-  nextcloud_config:
-    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_nextcloud_config
-  heimdall_config:
-    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_heimdall_config
-  uptime_kuma_data:
-    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_uptime_kuma_data
-  vaultwarden_data:
-    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_vaultwarden_data
+  # Shared configuration volumes
+  shared_config:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_shared_config
+  
+  # Backup volumes
+  backup_data:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_backup_data
+

@@ -1,0 +1,157 @@
+version: '3.8'
+
+# Simplified deployment for sandbox testing with host networking
+name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}
+
+services:
+  # Core Infrastructure
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_grafana
+    restart: unless-stopped
+    network_mode: host
+    ports:
+      - "${GRAFANA_PORT}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - grafana_config:/etc/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_DOMAIN=${PRIMARY_DOMAIN}
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_prometheus
+    restart: unless-stopped
+    network_mode: host
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./config/prometheus:/etc/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+
+  loki:
+    image: grafana/loki:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_loki
+    restart: unless-stopped
+    network_mode: host
+    ports:
+      - "${LOKI_PORT}:3100"
+    volumes:
+      - loki_data:/loki
+      - ./config/loki:/etc/loki
+    command: -config.file=/etc/loki/local-config.yaml
+
+  uptime_kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_uptime_kuma
+    restart: unless-stopped
+    network_mode: host
+    ports:
+      - "${UPTIME  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_vaultwarden
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - WEBSOCKET_ENABLED=true
+      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
+      - ROCKET_PORT=${VAULTWARDEN_PORT}
+    volumes:
+      - vaultwarden_data:/datavironment:
+      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
+      - WEBSOCKET_ENABLED=true
+
+  heimdall:
+    image: lscr.io/linuxserver/heimdall:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_heimdall
+    restart: unless-stopped
+    network_mode: host
+    ports:
+      - "${HEIMDALL_HTTP_PORT}:80"
+      - "${HEIMDALL_HTTPS_PORT}:443"
+    volumes:
+      - heimdall_config:/config
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+
+  nextcloud:
+    image: nextcloud:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_nextcloud
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}
+      - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD}
+      - APACHE_HTTP_PORT=${NEXTCLOUD_PORT}
+    volumes:
+      - nextcloud_data:/var/www/html
+      - ${NEXTCLOUD_DATA_PATH}:/var/www/html/data
+
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_jellyfin
+    restart: unless-stopped
+    network_mode: host
+    ports:
+      - "${JELLYFIN_PORT}:8096"
+    volumes:
+      - jellyfin_config:/config
+      - ${MEDIA_MOVIES_PATH}:/data/movies
+      - ${MEDIA_TV_SERIES_PATH}:/data/tvshows
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_plex
+    restart: unless-stopped
+    network_mode: host
+    ports:
+      - "${PLEX_PORT}:32400"
+    volumes:
+      - plex_config:/config
+      - ${MEDIA_MOVIES_PATH}:/data/movies
+      - ${MEDIA_TV_SERIES_PATH}:/data/tvshows
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VERSION=docker
+
+volumes:
+  grafana_data:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_grafana_data
+  grafana_config:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_grafana_config
+  prometheus_data:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_prometheus_data
+  loki_data:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_loki_data
+  uptime_kuma_data:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_uptime_kuma_data
+  vaultwarden_data:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_vaultwarden_data
+  heimdall_config:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_heimdall_config
+  nextcloud_data:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_nextcloud_data
+  jellyfin_config:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_jellyfin_config
+  plex_config:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_plex_config
+

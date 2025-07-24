@@ -1,0 +1,325 @@
+version: '3.8'
+
+services:
+  # Core Infrastructure
+  traefik:
+    image: traefik:v3.0
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_traefik
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --api.dashboard=true
+      - --api.insecure=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  # Analytics & Monitoring
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_grafana
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_SERVER_HTTP_PORT=3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_prometheus
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.listen-address=0.0.0.0:9090'
+    volumes:
+      - ./config/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+
+  # Monitoring Services
+  uptime_kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_uptime_kuma
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - uptime_kuma_data:/app/data
+
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_node_exporter
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--web.listen-address=0.0.0.0:9100'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_cadvisor
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+
+  blackbox_exporter:
+    image: prom/blackbox-exporter:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_blackbox_exporter
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - '--web.listen-address=0.0.0.0:9115'
+
+  # Logging
+  loki:
+    image: grafana/loki:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_loki
+    restart: unless-stopped
+    network_mode: host
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./config/loki:/etc/loki
+      - loki_data:/loki
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_promtail
+    restart: unless-stopped
+    network_mode: host
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./config/promtail:/etc/promtail
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+
+  # Security
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_vaultwarden
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - WEBSOCKET_ENABLED=true
+      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
+      - ROCKET_PORT=8083
+    volumes:
+      - vaultwarden_data:/data
+
+  # Media
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_jellyfin
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - jellyfin_config:/config
+      - ${MEDIA_PATH_MOVIES}:/data/movies
+      - ${MEDIA_PATH_TV}:/data/tvshows
+
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_plex
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VERSION=docker
+    volumes:
+      - plex_config:/config
+      - ${MEDIA_PATH_MOVIES}:/movies
+      - ${MEDIA_PATH_TV}:/tv
+
+  # Database Services
+  postgres:
+    image: postgres:15
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_postgres
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - POSTGRES_DB=alwazw_db
+      - POSTGRES_USER=alwazw
+      - POSTGRES_PASSWORD=WaficWazzan!2
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_redis
+    restart: unless-stopped
+    network_mode: host
+    command: redis-server --requirepass WaficWazzan!2
+    volumes:
+      - redis_data:/data
+
+  mariadb:
+    image: mariadb:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_mariadb
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - MYSQL_ROOT_PASSWORD=WaficWazzan!2
+      - MYSQL_DATABASE=alwazw_db
+      - MYSQL_USER=alwazw
+      - MYSQL_PASSWORD=WaficWazzan!2
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+  # Utilities
+  filebrowser:
+    image: filebrowser/filebrowser:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_filebrowser
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - FB_BASEURL=/filebrowser
+    volumes:
+      - filebrowser_data:/database
+      - /tmp/files:/srv
+
+  # Networking
+  adguard:
+    image: adguard/adguardhome:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_adguard
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - adguard_work:/opt/adguardhome/work
+      - adguard_conf:/opt/adguardhome/conf
+
+  # Automation
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_n8n
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=alwazw
+      - N8N_BASIC_AUTH_PASSWORD=WaficWazzan!2
+      - N8N_PORT=5678
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+  # Backup Services
+  duplicati:
+    image: lscr.io/linuxserver/duplicati:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_duplicati
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - duplicati_config:/config
+      - duplicati_backups:/backups
+      - /tmp:/source
+
+  # Email Services
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_mailhog
+    restart: unless-stopped
+    network_mode: host
+
+  # Additional Monitoring
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_dozzle
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  # Notification Services
+  gotify:
+    image: gotify/server:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_gotify
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - GOTIFY_DEFAULTUSER_NAME=alwazw
+      - GOTIFY_DEFAULTUSER_PASS=WaficWazzan!2
+    volumes:
+      - gotify_data:/app/data
+
+  # Speed Test
+  librespeed:
+    image: lscr.io/linuxserver/librespeed:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_librespeed
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+
+  # Photo Management
+  photoprism:
+    image: photoprism/photoprism:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_photoprism
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PHOTOPRISM_ADMIN_PASSWORD=WaficWazzan!2
+      - PHOTOPRISM_HTTP_PORT=2342
+    volumes:
+      - photoprism_storage:/photoprism/storage
+      - /tmp/photos:/photoprism/originals
+
+  # Sync Services
+  syncthing:
+    image: lscr.io/linuxserver/syncthing:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_syncthing
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - syncthing_config:/config
+      - /tmp/sync:/data1
+
+volumes:
+  grafana_data:
+  prometheus_data:
+  uptime_kuma_data:
+  loki_data:
+  vaultwarden_data:
+  jellyfin_config:
+  plex_config:
+  postgres_data:
+  redis_data:
+  mariadb_data:
+  filebrowser_data:
+  adguard_work:
+  adguard_conf:
+  n8n_data:
+  duplicati_config:
+  duplicati_backups:
+  gotify_data:
+  photoprism_storage:
+  syncthing_config:

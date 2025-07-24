@@ -1,0 +1,63 @@
+// Grafana Agent Flow Configuration
+// This configuration collects metrics, logs, and traces
+
+// Prometheus metrics collection
+prometheus.scrape "default" {
+  targets = [
+    {"__address__" = "localhost:9090"},
+    {"__address__" = "node_exporter:9100"},
+    {"__address__" = "cadvisor:8080"},
+    {"__address__" = "blackbox_exporter:9115"},
+  ]
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+// Remote write to Prometheus
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+}
+
+// Log collection from Docker containers
+loki.source.docker "default" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.docker.containers.targets
+  forward_to = [loki.write.default.receiver]
+}
+
+// Docker container discovery
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+// Forward logs to Loki
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+
+// System metrics collection
+prometheus.exporter.unix "default" {
+  include_exporter_metrics = true
+}
+
+prometheus.scrape "unix" {
+  targets    = prometheus.exporter.unix.default.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+// Process exporter for detailed process metrics
+prometheus.exporter.process "default" {
+  matcher {
+    name = "{{.Comm}}"
+    cmdline = ["{{.Cmdline}}"]
+  }
+}
+
+prometheus.scrape "process" {
+  targets    = prometheus.exporter.process.default.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+

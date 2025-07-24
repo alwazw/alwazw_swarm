@@ -1,44 +1,29 @@
-# =============================================================================
-# PROMTAIL - Log Shipping Agent
-# =============================================================================
+version: '3.8'
+
 services:
   promtail:
+    extends:
+      file: ../../_base.yml
+      service: common-base
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_promtail
     image: grafana/promtail:latest
-    container_name: promtail
-    restart: unless-stopped
     command: -config.file=/etc/promtail/config.yml
     volumes:
-      - promtail_data:/promtail
-      - ./config/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - ./config/promtail:/etc/promtail
       - /var/log:/var/log:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    depends_on:
-      - loki
+    environment:
+      - HOSTNAME=${HOSTNAME}
     networks:
       - logging_network
+    depends_on:
+      - loki
+    labels:
+      - "traefik.enable=false"
 
-
-# =============================================================================
-# NETWORKS
-# =============================================================================
 networks:
   logging_network:
-    driver: bridge
-    internal: false
-  proxy_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_logging_network
     external: true
 
-# =============================================================================
-# VOLUMES
-# =============================================================================
-volumes:
-  loki_data:
-  promtail_data:
-  elasticsearch_data:
-  filebeat_data:
-  graylog_mongo_data:
-  graylog_opensearch_data:
-  graylog_data:
-
-#############################################

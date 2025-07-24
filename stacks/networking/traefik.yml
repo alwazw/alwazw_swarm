@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  traefik:
+    extends:
+      file: ../../_base.yml
+      service: common-base
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_traefik
+    image: traefik:v3.0
+    ports:
+      - "${TRAEFIK_HTTP_PORT}:80"
+      - "${TRAEFIK_HTTPS_PORT}:443"
+      - "${TRAEFIK_DASHBOARD_PORT}:8080"
+    command:
+      # Enable Docker provider
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=${COMPOSE_PROJECT_NAME:-alwazw_swarm}_traefik_network
+      
+      # Enable file provider for static configuration
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.watch=true
+      
+      # Entry points
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      
+      # HTTP to HTTPS redirect
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      
+      # Let's Encrypt configuration
+      - --certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      
+      # Dashboard
+      - --api.dashboard=true
+      - --api.insecure=true
+      
+      # Logging
+      - --log.level=INFO
+      - --accesslog=true
+      
+      # Metrics
+      - --metrics.prometheus=true
+      - --metrics.prometheus.addEntryPointsLabels=true
+      - --metrics.prometheus.addServicesLabels=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_acme:/acme.json
+      - ./config/traefik:/etc/traefik/dynamic:ro
+    environment:
+      - CLOUDFLARE_EMAIL=${LETSENCRYPT_EMAIL}
+      - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_API_KEY}
+    networks:
+      - traefik_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${PRIMARY_DOMAIN}`)"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+      
+      # Middleware for dashboard authentication
+      - "traefik.http.middlewares.auth.basicauth.users=admin:$$2y$$10$$K8XvS8K8K8K8K8K8K8K8K8"
+      - "traefik.http.routers.traefik.middlewares=auth"
+
+volumes:
+  traefik_acme:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_traefik_acme
+
+networks:
+  traefik_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_traefik_network
+    driver: bridge
+
