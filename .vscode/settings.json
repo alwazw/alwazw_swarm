@@ -1,0 +1,12 @@
+{
+    "postman.settings.dotenv-detection-notification-visibility": false,
+    "spellright.language": [
+        "en"
+    ],
+    "spellright.documentTypes": [
+        "markdown",
+        "latex",
+        "plaintext",
+        "yaml"
+    ]
+}
