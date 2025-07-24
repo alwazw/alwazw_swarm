@@ -1,76 +1,19 @@
-# =============================================================================
-# DUPLICATI - Backup Solution
-# =============================================================================
-
 services:
   duplicati:
+    extends:
+      file: ../../_base.yml
+      service: common-base
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_duplicati
     image: lscr.io/linuxserver/duplicati:latest
-    container_name: duplicati
-    restart: unless-stopped
+    ports:
+      - "${DUPLICATI_PORT}:8200"
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=${TZ}
+      PUID: "${PUID}"
+      PGID: "${PGID}"
+      # TZ is inherited from _base.yml
     volumes:
       - duplicati_config:/config
-      - ${MEDIA_BASE_PATH}:/source
-      - ${BACKUP_LOCAL_PATH}:/backups
+      - ${MEDIA_BASE_PATH}/backups:/backups # A place to store backups
+      - /var/lib/docker/volumes:/source # Granting access to docker volumes for backup
     networks:
-      - media_network
-      - proxy_network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.duplicati.rule=Host(`backup.${PRIMARY_DOMAIN}`) || Host(`backup.${SECONDARY_DOMAIN}`)"
-      - "traefik.http.routers.duplicati.tls=true"
-      - "traefik.http.routers.duplicati.tls.certresolver=${CERT_RESOLVER}"
-      - "traefik.http.services.duplicati.loadbalancer.server.port=8200"
-
-
-
-# =============================================================================
-# NETWORKS
-# =============================================================================
-networks:
-  nextcloud_network:
-    driver: bridge
-    internal: false
-  media_network:
-    driver: bridge
-    internal: false
-  proxy_network:
-    external: true
-
-# =============================================================================
-# VOLUMES
-# =============================================================================
-volumes:
-  # Nextcloud
-  nextcloud_data:
-  nextcloud_db_data:
-  
-  # Syncthing
-  syncthing_config:
-  
-  # Plex
-  plex_config:
-  
-  # Jellyfin
-  jellyfin_config:
-  
-  # PhotoPrism
-  photoprism_storage:
-  photoprism_db_data:
-  
-  # Immich
-  immich_model_cache:
-  immich_postgres_data:
-  
-  # FileBrowser
-  filebrowser_config:
-  filebrowser_database:
-  
-  # Duplicati
-  duplicati_config:
-
-##############################################################33
-
+      - backup_network

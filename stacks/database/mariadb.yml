@@ -1,18 +1,16 @@
 services:
   mariadb:
-    extends: # Use 'extends' to inherit configuration from another service definition
-      service: x-common-service # Name of the service template in _base.yml
-      file: ../../_base.yml    # Path to _base.yml relative to mariadb.yml    
-#
-    container_name: mysql_main
+    extends:
+      file: ../../_base.yml
+      service: common-base
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_mariadb
     image: lscr.io/linuxserver/mariadb:latest
-#    restart: always
     ports:
       - "${MYSQL_MAIN_PORT}:3306"
     environment:
-      PUID_FILE: /run/secrets/puid.txt
-      PGID_FILE: /run/secrets/pgid.txt
-      TZ: ${TZ}
+      # TZ is inherited from _base.yml
+      PUID_FILE: /run/secrets/puid
+      PGID_FILE: /run/secrets/pgid
       MYSQL_DATABASE: ${MYSQL_MAIN_DATABASE}
       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
       MYSQL_USER_FILE: /run/secrets/mysql_user
@@ -22,27 +20,8 @@ services:
     networks:
       - database_network
     secrets:
+      - puid
+      - pgid
       - mysql_root_password
       - mysql_user
       - mysql_user_password
-      - puid
-      - pgid
-
-volumes:
-  mysql_config:
-
-networks:
-  database_network:
-    external: true
-
-#secrets:
-#  puid:
-#    file: ./secrets/puid.txt
-#  pgid:
-#    file: ./secrets/pgid.txt
-#  mysql_user:
-#    file: ./secrets/mysql_user.txt
-#  mysql_user_password:
-#    file: ./secrets/mysql_user_password.txt
-#  mysql_root_password:
-#    file: ./secrets/mysql_root_password.txt

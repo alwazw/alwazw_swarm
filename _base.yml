@@ -1,2 +1,8 @@
-x-common-service: &default-app-config
-  restart: unless-stopped
+# _base.yml
+# This file defines a common base service configuration that other services can extend.
+services:
+  common-base:
+    restart: unless-stopped
+    environment:
+      TZ: "${TZ}"
+

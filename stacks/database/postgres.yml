@@ -1,18 +1,17 @@
-#####################
-# POSTGRES
-#####################
-
 services:
   postgres:
-    image: postgres:latest
-    container_name: postgres_main
-    restart: always
+    extends:
+      file: ../../_base.yml
+      service: common-base
+    container_name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_postgres
+    image: postgres:16
     ports:
       - "${POSTGRES_PORT}:5432"
     environment:
-      POSTGRES_DB: ${POSTGRES_MAIN_DB}
+      # TZ is inherited from _base.yml
       POSTGRES_USER_FILE: /run/secrets/postgres_user
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB: "${POSTGRES_MAIN_DB}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -20,13 +19,3 @@ services:
     secrets:
       - postgres_user
       - postgres_password
-
-networks:
-  database_network:
-    external: true
-
-secrets:
-  postgres_user:
-    file: ./secrets/postgres_user.txt
-  postgres_password:
-    file: ./secrets/postgres_password.txt

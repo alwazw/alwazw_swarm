@@ -1,27 +1,18 @@
 # docker-compose.yml
-version: '3.8'
-name: full_stack
+name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}
 
-# Component Files to be Included 
+# Component Files to be Included
 include:
-  - path: ./_base.yml # <--- ADD THIS LINE FIRST! This ensures the anchor is defined.
-#  - path: ./stacks/database/postgres.yml
-#  - path: ./stacks/database/redis.yml
   - path: ./stacks/database/mariadb.yml
   - path: ./stacks/database/pgadmin.yml
-#  - path: ./stacks/analytics/grafana.yml
+  - path: ./stacks/database/postgres.yml
+  - path: ./stacks/database/redis.yml
+  - path: ./stacks/analytics/grafana.yml
+  - path: ./stacks/nextcloud/nextcloud.yml
+  - path: ./stacks/networking/cloudflared.yml
 
-# This file acts as the orchestrator, merging all component files
-# services:
-
-# Secrets
+# Secrets are defined here because they are referred to by included services.
 secrets:
-  # Secrets are defined here because they are referred to by included services.
-  postgres_user:
-    file: ./secrets/postgres_user.txt
-  postgres_password:
-    file: ./secrets/postgres_password.txt
-#
   puid:
     file: ./secrets/puid.txt
   pgid:
@@ -32,64 +23,42 @@ secrets:
     file: ./secrets/mysql_user_password.txt
   mysql_root_password:
     file: ./secrets/mysql_root_password.txt
-#
-  pgadmin_email:
-    file: ./secrets/pgadmin_email.txt
   pgadmin_password:
     file: ./secrets/pgadmin_password.txt
-#
+  postgres_user:
+    file: ./secrets/postgres_user.txt
+  postgres_password:
+    file: ./secrets/postgres_password.txt
   grafana_password:
     file: ./secrets/grafana_password.txt
-
+  cloudflare_tunnel_token:
+    file: ./secrets/cloudflare_tunnel_token.txt
 
 # All networks should be defined in the main compose file
 networks:
   database_network:
-    name: ${COMPOSE_PROJECT_NAME:-full_stack}_database_network
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_database_network
     driver: bridge
   analytics_network:
-    name: ${COMPOSE_PROJECT_NAME:-full_stack}_analytics_network
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_analytics_network
     driver: bridge
-#  networking_network:
-#    driver: bridge
-#  dashboard_network:
-#    driver: bridge
-#  analytics_network:
-#    driver: bridge
-#  media_network:
-#    driver: bridge
-#  automation_network:
-#    driver: bridge
-#  security_network:
-#    driver: bridge
-#  wazuh_network:
-#    driver: bridge
+  nextcloud_network:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_nextcloud_network
+    driver: bridge
 
 # All named volumes should be defined here
 volumes:
-  # Database Volumes
-  postgres_data:
-  redis_data:
   mysql_config:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_mysql_config
   pgadmin_data:
-  # Analytics Volumes
-  grafana_config:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_pgadmin_data
+  postgres_data:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_postgres_data
+  redis_data:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_redis_data
   grafana_data:
-  grafana_plugins:
-  # Networking Volumes
- # librespeed_config:
- # adguardhome_work:
- # adguardhome_conf:
-  # Security Volumes
- # vaultwarden_data:
- # wazuh_manager_data:
- # wazuh_manager_certs:
- # wazuh_indexer_data:
- # wazuh_dashboard_data:
-  # Dashboard Volumes
- # heimdall_config:
-  # Media Volumes
- # plex_config:
-  # Automation Volumes
- # n8n_data:
- # home_assistant_config:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_grafana_data
+  nextcloud_data:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_nextcloud_data
+  nextcloud_config:
+    name: ${COMPOSE_PROJECT_NAME:-alwazw_swarm}_nextcloud_config
